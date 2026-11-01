@@ -239,9 +239,9 @@ export default function Admin() {
         </span>
         <h1 style={{ marginBottom: 8 }}>Dashboard</h1>
         <p>
-          Writes go through <code className="code-chip">services/api.js</code>. In mock mode they land in
-          localStorage; flip <code className="code-chip">USE_MOCK</code> and the same calls hit{" "}
-          <code className="code-chip">/api/projects</code> and <code className="code-chip">/api/posts</code>.
+          Writes go through <code className="code-chip">services/api.js</code>, which calls the deployed API with
+          the JWT from your session: <code className="code-chip">/api/projects</code>,{" "}
+          <code className="code-chip">/api/blog</code> and <code className="code-chip">/api/contact</code>.
         </p>
       </div>
 
