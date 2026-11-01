@@ -9,6 +9,7 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required"],
       trim: true,
+      minlength: [2, "Name is too short"],
       maxlength: [80, "Name is too long"],
     },
     email: {
@@ -22,6 +23,9 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: [true, "Message is required"],
       trim: true,
+      /* same floor the contact form enforces client-side, so a request that
+         skips the UI cannot store a two-word message */
+      minlength: [10, "Message is too short"],
       maxlength: [4000, "Message is too long"],
     },
     read: {
