@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cris Fu API — live endpoint reference</title>
+<style>
+  :root{
+    --bg:#06080D; --panel:#0C1119; --panel-2:#0F1520; --line:#1A2230;
+    --text:#E8EEF6; --muted:#8895A7; --dim:#5C6879;
+    --cyan:#22D3EE; --violet:#8B5CF6; --green:#34D399; --red:#F87171; --amber:#FBBF24;
+    --mono:"JetBrains Mono","SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.7;
+       background-image:radial-gradient(700px 400px at 15% -10%,rgba(34,211,238,.12),transparent 70%),
+                        radial-gradient(600px 380px at 90% 0%,rgba(139,92,246,.14),transparent 70%);}
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--line);background:rgba(6,8,13,.7);backdrop-filter:blur(10px);position:sticky;top:0;z-index:5}
+  .bar{display:flex;align-items:center;gap:14px;height:62px;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-weight:700;letter-spacing:.5px}
+  .logo span{color:var(--cyan)}
+  .spacer{flex:1}
+  .pill{font-family:var(--mono);font-size:12px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .pill.ok{border-color:rgba(52,211,153,.4);color:var(--green);background:rgba(52,211,153,.08)}
+  .pill.bad{border-color:rgba(248,113,113,.45);color:var(--red);background:rgba(248,113,113,.08)}
+  h1{font-size:clamp(26px,4vw,38px);line-height:1.2;margin:44px 0 10px;letter-spacing:-.02em}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{color:var(--muted);max-width:70ch;margin:0 0 26px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:0 0 22px}
+  .card h2{font-size:15px;margin:0 0 14px;font-weight:650;letter-spacing:.02em}
+  .card h2 code{font-family:var(--mono);font-size:13px;color:var(--muted);font-weight:400}
+  .base{font-family:var(--mono);font-size:13.5px;color:var(--text);background:#070A10;border:1px solid var(--line);
+        border-radius:10px;padding:12px 14px;word-break:break-all}
+  .base b{color:var(--cyan);font-weight:600}
+  .note{font-size:13.5px;color:var(--muted);margin:12px 0 0}
+  .note b{color:var(--text);font-weight:600}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+  button{font-family:var(--mono);font-size:12.5px;cursor:pointer;background:rgba(34,211,238,.08);color:var(--cyan);
+         border:1px solid rgba(34,211,238,.35);border-radius:9px;padding:8px 13px;transition:.15s}
+  button:hover{background:rgba(34,211,238,.16);transform:translateY(-1px)}
+  button:active{transform:none}
+  button.ghost{background:transparent;color:var(--muted);border-color:var(--line)}
+  input{font-family:var(--mono);font-size:12.5px;background:#070A10;border:1px solid var(--line);color:var(--text);
+        border-radius:9px;padding:9px 12px;flex:1;min-width:220px}
+  input:focus{outline:none;border-color:rgba(34,211,238,.5)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-weight:600;color:var(--dim);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+     padding:0 10px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 10px;border-bottom:1px solid rgba(26,34,48,.6);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.path{font-family:var(--mono);font-size:12.5px;color:var(--text);white-space:nowrap}
+  td.desc{color:var(--muted)}
+  .m{font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.04em}
+  .m.get{color:var(--green);background:rgba(52,211,153,.1)}
+  .m.post{color:var(--cyan);background:rgba(34,211,238,.1)}
+  .m.put{color:var(--amber);background:rgba(251,191,36,.1)}
+  .m.patch{color:var(--amber);background:rgba(251,191,36,.1)}
+  .m.del{color:var(--red);background:rgba(248,113,113,.1)}
+  .auth{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+  .auth b{color:var(--violet);font-weight:600}
+  .scroll{overflow-x:auto}
+  .console{font-family:var(--mono);font-size:12.5px;line-height:1.65;background:#05070B;border:1px solid var(--line);
+           border-radius:12px;padding:14px 16px;max-height:340px;overflow:auto;white-space:pre-wrap;word-break:break-word;color:#A9B6C7}
+  .console .k{color:var(--cyan)}
+  .console .s{color:var(--green)}
+  .console .n{color:var(--amber)}
+  .console .idle{color:var(--dim)}
+  .meta{display:flex;gap:16px;font-family:var(--mono);font-size:12px;color:var(--dim);margin:12px 0 8px;flex-wrap:wrap}
+  .meta b{color:var(--text);font-weight:600}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding:22px 0 40px;color:var(--dim);font-size:13px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:720px){.two{grid-template-columns:1fr}}
+  code.inline{font-family:var(--mono);font-size:12.5px;background:#070A10;border:1px solid var(--line);border-radius:6px;padding:1px 6px;color:var(--text)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <div class="logo">cris<span>.</span>api</div>
+    <div class="spacer"></div>
+    <div class="pill" id="status">checking…</div>
+    <a href="./" style="font-size:13px">← back to the site</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1>Portfolio &amp; Blog <em>REST API</em></h1>
+  <p class="lede">
+    The Express + MongoDB back-end behind the portfolio site. 22 endpoints, JWT authentication,
+    ownership checks on every write. This page talks to the deployed API from your browser — the
+    exact same cross-origin requests the React client makes.
+  </p>
+
+  <div class="card">
+    <h2>Base URL</h2>
+    <div class="base">GET&nbsp;&nbsp;<b>https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api</b></div>
+    <p class="note">
+      <b>Heads-up:</b> Alibaba Cloud Function Compute adds <code class="inline">Content-Disposition: attachment</code>
+      to every response from its default domain, so pasting the URL into the address bar downloads a
+      <code class="inline">.json</code> file instead of rendering it. XHR/fetch ignores that header, which is why this
+      page (and the site) can read it normally. The buttons below prove the API is live.
+    </p>
+    <div class="row">
+      <button data-get="/health">GET /health</button>
+      <button data-get="">GET /api</button>
+      <button data-get="/projects">GET /projects</button>
+      <button data-get="/blog">GET /blog</button>
+      <button data-get="/contact" data-expect="401">GET /contact (expect 401)</button>
+      <button class="ghost" data-get="/admin/stats" data-expect="401">GET /admin/stats (expect 401)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Request log <code id="reqline">— nothing sent yet</code></h2>
+    <div class="meta">
+      <span>status <b id="m-status">—</b></span>
+      <span>time <b id="m-time">—</b></span>
+      <span>size <b id="m-size">—</b></span>
+      <span>origin <b id="m-origin">—</b></span>
+    </div>
+    <div class="row" style="margin:0 0 12px">
+      <input id="token" placeholder="optional: paste a JWT to send Authorization: Bearer …" autocomplete="off" spellcheck="false" />
+      <button class="ghost" id="save-token">use token</button>
+    </div>
+    <div class="console" id="out"><span class="idle">// hit one of the buttons above — the JSON response lands here</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Endpoints <code>everything is mounted under /api</code></h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose / expected body</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="m get">GET</span></td><td class="path">/health</td><td class="auth">—</td><td class="desc">Uptime probe. <code class="inline">{success,status,uptime,at}</code></td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/</td><td class="auth">—</td><td class="desc">Machine-readable map of every route.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/users/register</td><td class="auth">—</td><td class="desc"><code class="inline">{username,email,password}</code> → 201 + JWT. 409 on duplicate, 400 on weak password.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/users/login</td><td class="auth">—</td><td class="desc"><code class="inline">{email,password}</code> → 200 + token. One message for both failure cases.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/users/me</td><td class="auth"><b>Bearer</b></td><td class="desc">Token re-validation; the SPA calls it on every page load.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/projects</td><td class="auth">—</td><td class="desc">All projects. <code class="inline">?cat=web</code> filters by category.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/projects/:id</td><td class="auth">—</td><td class="desc">One project. Malformed id → 404, not a cast error.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/projects</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,description,category,tags,link,year}</code>. Owner comes from the token.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Partial update. 403 for anyone who is not the owner.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/blog</td><td class="auth">—</td><td class="desc">Posts, author populated. <code class="inline">?tag=</code> <code class="inline">?q=</code></td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/blog/:id</td><td class="auth">—</td><td class="desc">One post plus <code class="inline">commentCount</code>.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/blog</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,excerpt,body,tags,readTime}</code></td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/blog/:id</td><td class="auth"><b>Bearer</b> + author</td><td class="desc">Update. 403 for a different user.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:id</td><td class="auth"><b>Bearer</b> + author</td><td class="desc">Deletes the post and its comments together.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/blog/:postId/comments</td><td class="auth">—</td><td class="desc">Comments for one post, author populated.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/blog/:postId/comments</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{body}</code> — author taken from the token, never the body.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:postId/comments/:commentId</td><td class="auth"><b>Bearer</b></td><td class="desc">Comment author or the post author may delete.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/contact</td><td class="auth">—</td><td class="desc"><code class="inline">{name,email,message}</code> → 201. 400 on an invalid email.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/contact</td><td class="auth"><b>Bearer</b></td><td class="desc">Admin inbox, newest first.</td></tr>
+          <tr><td><span class="m patch">PATCH</span></td><td class="path">/contact/:id/read</td><td class="auth"><b>Bearer</b></td><td class="desc">Mark one message read.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/admin/stats</td><td class="auth"><b>Bearer</b></td><td class="desc">Four counters for the dashboard.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/admin/activity</td><td class="auth"><b>Bearer</b></td><td class="desc">Merged feed of the ten newest events.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      Every failure has the same envelope: <code class="inline">{ success:false, message:"…", errors:{ field:"…" } }</code>.
+    </p>
+  </div>
+
+  <div class="card two" style="grid-template-columns:1fr">
+    <div>
+      <h2>Try it with curl</h2>
+      <div class="console" style="max-height:none">curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/projects
+
+TOKEN=$(curl -s -X POST https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/users/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cris@crisfu.dev","password":"crisfu2026"}' | sed 's/.*"token":"\([^"]*\)".*/\1/')
+
+curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/users/me \
+  -H "Authorization: Bearer $TOKEN"</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    Cris Fu · Web Data Management capstone · Express · MongoDB Atlas · Function Compute ·
+    <a href="./">portfolio site</a> ·
+    <a href="https://github.com/147258wsd-blip/crisfu-capstone" target="_blank" rel="noreferrer">source</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var API = "https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api";
+  var qs = new URLSearchParams(location.search);
+  if (qs.get("api")) API = qs.get("api").replace(/\/$/, "");
+
+  var out = document.getElementById("out");
+  var statusPill = document.getElementById("status");
+  var reqline = document.getElementById("reqline");
+  var mStatus = document.getElementById("m-status");
+  var mTime = document.getElementById("m-time");
+  var mSize = document.getElementById("m-size");
+  var mOrigin = document.getElementById("m-origin");
+  var tokenInput = document.getElementById("token");
+
+  var saved = sessionStorage.getItem("docs.token") || "";
+  if (saved) tokenInput.value = saved;
+  mOrigin.textContent = location.origin || "file://";
+
+  function paint(text) {
+    /* tiny JSON highlighter — no dependencies */
+    var safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    safe = safe.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"(\s*:)?/g, function (_, inner, colon) {
+      return colon ? '<span class="k">"' + inner + '"</span>' + colon
+                   : '<span class="s">"' + inner + '"</span>';
+    });
+    safe = safe.replace(/\b(true|false|null)\b/g, '<span class="n">$1</span>');
+    safe = safe.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="n">$1</span>');
+    out.innerHTML = safe;
+  }
+
+  function call(path, expect) {
+    var url = API + path;
+    var headers = {};
+    var token = (tokenInput.value || "").trim();
+    if (token) headers.Authorization = "Bearer " + token;
+
+    reqline.textContent = "GET " + url;
+    out.innerHTML = '<span class="idle">// waiting…</span>';
+    mStatus.textContent = "…";
+    mTime.textContent = "…";
+    mSize.textContent = "…";
+
+    var t0 = performance.now();
+    fetch(url, { headers: headers })
+      .then(function (res) {
+        var ms = Math.round(performance.now() - t0);
+        return res.text().then(function (text) {
+          mStatus.textContent = res.status + " " + res.statusText;
+          mStatus.style.color = res.ok ? "var(--green)" : "var(--red)";
+          mTime.textContent = ms + " ms";
+          mSize.textContent = new Blob([text]).size + " B";
+          var pretty = text;
+          try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { /* keep raw */ }
+          if (text.length > 6000) pretty = pretty.slice(0, 6000) + "\n… truncated for display";
+          paint(pretty);
+          statusPill.className = "pill " + (res.ok || res.status === expect ? "ok" : "bad");
+          statusPill.textContent = "API " + (res.ok || res.status === expect ? "reachable" : "error " + res.status);
+        });
+      })
+      .catch(function (err) {
+        var ms = Math.round(performance.now() - t0);
+        mStatus.textContent = "network error";
+        mStatus.style.color = "var(--red)";
+        mTime.textContent = ms + " ms";
+        mSize.textContent = "0 B";
+        out.innerHTML = '<span class="idle">// ' + String(err && err.message || err) + "</span>";
+        statusPill.className = "pill bad";
+        statusPill.textContent = "API unreachable";
+      });
+  }
+
+  document.querySelectorAll("button[data-get]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      call(btn.getAttribute("data-get"), Number(btn.getAttribute("data-expect") || 0));
+    });
+  });
+
+  document.getElementById("save-token").addEventListener("click", function () {
+    sessionStorage.setItem("docs.token", tokenInput.value.trim());
+    reqline.textContent = tokenInput.value.trim() ? "token stored for this tab" : "token cleared";
+  });
+
+  /* boot: prove the API answers before the visitor clicks anything */
+  fetch(API + "/health")
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      statusPill.className = "pill ok";
+      statusPill.textContent = "API live · uptime " + j.uptime + "s";
+    })
+    .catch(function () {
+      statusPill.className = "pill bad";
+      statusPill.textContent = "API unreachable";
+    });
+})();
+</script>
+</body>
+</html>

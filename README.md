@@ -13,6 +13,7 @@ application** and the **API**. They run on two hosts:
 |---|---|
 | Front-end (React, `npm run build`) | `https://147258wsd-blip.github.io/crisfu-capstone/` |
 | Back-end API | `https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api` |
+| API reference (opens in a browser, live calls) | `https://147258wsd-blip.github.io/crisfu-capstone/api-docs.html` |
 
 The site is the Vite build published to GitHub Pages (`npm run publish:pages`); the API is an
 Express app running on Alibaba Cloud Function Compute, backed by MongoDB Atlas.
@@ -44,7 +45,7 @@ Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also 
 | Folder | What it is |
 |---|---|
 | `server/` | Express API — models, JWT auth, ownership checks, 22 endpoints, seed script. See `server/README.md` for the full endpoint table. |
-| `cris-react/` | React 18 client — Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. |
+| `cris-react/` | The client folder — React 18 + Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. |
 
 Pages: `/` home, `/projects` + `/projects/:id`, `/blog` + `/blog/:id`, `/debate`, `/contact`,
 `/login`, `/register`, `/admin` (protected).

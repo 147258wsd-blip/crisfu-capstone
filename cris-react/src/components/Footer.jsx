@@ -29,9 +29,14 @@ export default function Footer() {
           )}
         </div>
         <div className="links">
-          <a href="#">GitHub</a>
+          <a href="https://github.com/147258wsd-blip/crisfu-capstone" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
           <Link to="/contact">Email</Link>
           <Link to="/blog">RSS</Link>
+          {/* static page in public/ — the API's own reference, since the FC
+              default domain forces a download on direct navigation */}
+          <a href={`${import.meta.env.BASE_URL}api-docs.html`}>API</a>
         </div>
       </div>
     </footer>

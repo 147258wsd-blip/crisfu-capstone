@@ -76,7 +76,9 @@ run("git", ["init", "-q", "-b", BRANCH], { cwd: OUT });
 run("git", ["add", "-A"], { cwd: OUT });
 /* identity goes through the environment: `run` uses a shell on Windows, so a
    `-c user.name=Cris Fu` argument would be split on the space */
-run("git", ["commit", "-q", "-m", "Deploy the built site"], {
+/* the message is quoted by hand: `run` goes through a shell on Windows, which
+   would otherwise split "Deploy the built site" into four pathspecs */
+run("git", ["commit", "-q", "-m", '"Deploy the built site"'], {
   cwd: OUT,
   env: {
     ...process.env,
