@@ -160,7 +160,7 @@
           <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:postId/comments/:commentId</td><td class="auth"><b>Bearer</b></td><td class="desc">Comment author or the post author may delete.</td></tr>
           <tr><td><span class="m post">POST</span></td><td class="path">/contact</td><td class="auth">—</td><td class="desc"><code class="inline">{name,email,message}</code> → 201. 400 on an invalid email.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/contact</td><td class="auth"><b>Bearer</b></td><td class="desc">Admin inbox, newest first.</td></tr>
-          <tr><td><span class="m patch">PATCH</span></td><td class="path">/contact/:id/read</td><td class="auth"><b>Bearer</b></td><td class="desc">Mark one message read.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/contact/:id/read</td><td class="auth"><b>Bearer</b></td><td class="desc">Mark one message read.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/admin/stats</td><td class="auth"><b>Bearer</b></td><td class="desc">Four counters for the dashboard.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/admin/activity</td><td class="auth"><b>Bearer</b></td><td class="desc">Merged feed of the ten newest events.</td></tr>
         </tbody>

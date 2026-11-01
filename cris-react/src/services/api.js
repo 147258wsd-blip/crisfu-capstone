@@ -334,7 +334,10 @@ export const api = {
 
     async markRead(id) {
       if (!USE_MOCK) {
-        const { data } = await http.patch(`/contact/${id}/read`);
+        /* PUT, not PATCH: the Function Compute HTTP trigger refuses PATCH at the
+           gateway (403) before the request reaches Express. Both verbs are wired
+           to the same handler, so the contract is unchanged. */
+        const { data } = await http.put(`/contact/${id}/read`);
         return adaptMessage(data.message || data);
       }
       return mock(() => ({ ok: true }), 220);

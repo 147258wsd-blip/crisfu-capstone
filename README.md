@@ -77,7 +77,7 @@ Everything is mounted under `/api`; `GET /api` returns this same map at runtime.
 | DELETE | `/blog/:postId/comments/:commentId` | Bearer | comment author or post author |
 | POST | `/contact` | — | 400 on an invalid email |
 | GET | `/contact` | Bearer | admin inbox, newest first |
-| PATCH | `/contact/:id/read` | Bearer | mark one message as read |
+| PUT/PATCH | `/contact/:id/read` | Bearer | mark one message as read. The client sends **PUT**: the Function Compute HTTP trigger rejects PATCH at the gateway (403) before Express sees it, so both verbs point at the same handler. |
 | GET | `/admin/stats` | Bearer | four counters via `countDocuments` |
 | GET | `/admin/activity` | Bearer | merged feed of the 10 newest events |
 
