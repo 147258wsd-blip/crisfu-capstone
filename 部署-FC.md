@@ -6,7 +6,18 @@
 **代价说清楚**：要实名认证；免费额度是"新用户试用 + 每月额度"，不是永久无限免费——
 但按这套 API 的用量折算，正常使用一个月在 0~1 元级别。
 
-一条函数同时跑前端和 API，只需一个域名，不存在跨域问题。
+> **重要：默认域名不能直接当网站用。**
+> FC 会对 `*.fcapp.run` 的**每一个响应**强制加 `Content-Disposition: attachment`，
+> 浏览器收到就下载而不是渲染页面。这个头是网关加的策略，代码里清不掉，去掉它必须绑定
+> 自定义域名 + ICP 备案。
+>
+> 它**不影响接口调用**（XHR 会忽略这个头），所以正确分工是：
+>
+> - **API 放 FC** → `https://xxx.fcapp.run/api`
+> - **静态前端放 GitHub Pages** → `npm run publish:pages`（见 `cris-react/scripts/publish-pages.cjs`）
+>
+> 打包时仍然会把 `public/` 一起塞进 zip，那是为了让 FC 上的同源部署（VPS / 容器）保留，
+> 但线上交付地址请用 Pages 那一个。
 
 ---
 

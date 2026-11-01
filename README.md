@@ -7,30 +7,35 @@ Capstone project. A REST API built with Express + MongoDB, and a React client th
 ## Live deployment
 
 The rubric asks for two things to be reachable on the public internet: the **built React
-application** and the **API**. Both are served from one Alibaba Cloud Function Compute
-instance, so they are two addresses on one host:
+application** and the **API**. They run on two hosts:
 
 | What | URL |
 |---|---|
-| Front-end (React, `npm run build`) | `https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run` |
+| Front-end (React, `npm run build`) | `https://147258wsd-blip.github.io/crisfu-capstone/` |
 | Back-end API | `https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api` |
 
-Both are live. The API answers `GET /api/health`, and the site is the Vite build served by the
-same function.
+The site is the Vite build published to GitHub Pages (`npm run publish:pages`); the API is an
+Express app running on Alibaba Cloud Function Compute, backed by MongoDB Atlas.
 
-Why one host instead of two: the free tier gives a single container, so the compiled site is
-served by the same process as the API (`server/api/fc.js` reads `public/` for every non-`/api`
-GET). The client calls the API at the relative path `/api`, meaning every request the browser
-makes in production goes to the deployed back-end — never to a mock and never to `localhost`.
-That is also why there are no CORS settings to get wrong.
+Why the front-end is not on the same host as the API: Function Compute's default domain
+answers every response with `Content-Disposition: attachment`, so a browser downloads the page
+instead of rendering it. Removing that header requires binding a custom domain, which requires
+an ICP filing. The header does not affect XHR, so the API stays where it is and the static
+build lives on Pages. The client is compiled with an absolute API base
+(`VITE_API_URL`), so every request the browser makes in production goes to the deployed
+back-end — never to a mock and never to `localhost`. CORS is handled by the API: the origin is
+reflected, including the pre-flight for the `Authorization` header.
 
 Verification:
 
 ```bash
+curl -I https://147258wsd-blip.github.io/crisfu-capstone/               # 200 text/html, no attachment header
 curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/health     # {"success":true,"status":"ok",...}
 curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/projects   # {"success":true,"count":6,...}
-curl -I https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/portfolio   # 200 text/html — SPA route, not a 404
 ```
+
+Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also writes a
+`404.html` copy of `index.html`, which is the SPA fallback GitHub Pages honours.
 
 ---
 
