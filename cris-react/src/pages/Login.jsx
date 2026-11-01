@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useTitle } from "../hooks/useApi";
+import { USE_MOCK } from "../services/api";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -106,15 +107,21 @@ export default function Login() {
           <div className="form-note">
             No account yet? <Link to="/register">Create one</Link>
           </div>
-          <div className="auth-alt">
-            <button type="button" onClick={demo} disabled={pending}>
-              Use a demo account →
-            </button>
-          </div>
-          <p className="form-hint">
-            Demo mode: any valid email and a 6+ character password works. Use <code>wrongpass</code> to see
-            a rejected sign-in.
-          </p>
+          {/* the demo shortcut only exists in mock mode — against the real API
+              it would sign in to an account that does not exist */}
+          {USE_MOCK && (
+            <>
+              <div className="auth-alt">
+                <button type="button" onClick={demo} disabled={pending}>
+                  Use a demo account →
+                </button>
+              </div>
+              <p className="form-hint">
+                Demo mode: any valid email and a 6+ character password works. Use <code>wrongpass</code> to see
+                a rejected sign-in.
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
