@@ -1,0 +1,13 @@
+# Railway deploy config — only read when the service root is `server/`.
+# Dockerfile keeps the build reproducible; the health check must stay in sync
+# with routes/index.js.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

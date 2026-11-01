@@ -6,7 +6,8 @@ const mongoose = require("mongoose");
 
 /* On this machine Node's resolver is refused for SRV queries while the
    system resolver works, so allow an explicit list via .env. On Linux
-   (Render) this stays unset and the default resolver is used. */
+   (Railway / any Linux container) this stays unset and the default
+   resolver is used. */
 if (process.env.DNS_SERVERS) {
   const servers = process.env.DNS_SERVERS.split(",").map((s) => s.trim()).filter(Boolean);
   dns.setServers(servers);

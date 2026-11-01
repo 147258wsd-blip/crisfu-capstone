@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 
 /* Windows 上 Node 的 c-ares 解析器有时会被本地 DNS 拒绝 SRV 查询
    （nslookup 却正常）。允许通过 DNS_SERVERS 指定解析服务器；
-   Render 等 Linux 环境不设这个变量，走系统默认。 */
+   Linux 主机（Railway / Zeabur / 任何容器）不设这个变量，走系统默认。 */
 if (process.env.DNS_SERVERS) {
   const servers = process.env.DNS_SERVERS.split(",").map((s) => s.trim()).filter(Boolean);
   if (servers.length) dns.setServers(servers);

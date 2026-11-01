@@ -42,8 +42,8 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-/* Render terminates TLS in front of us; trust its proxy header so
-   req.protocol and rate-limit style logic behave. */
+/* The host terminates TLS in front of us (Railway, Vercel, Render, …);
+   trust its proxy header so req.protocol and rate-limit style logic behave. */
 app.set("trust proxy", 1);
 
 /* ---------- routes ---------- */

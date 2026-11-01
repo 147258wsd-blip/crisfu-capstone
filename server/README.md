@@ -141,22 +141,40 @@ All under `/api`. `GET /api` returns this map at runtime.
 **1. `querySrv ECONNREFUSED` on Windows.** Node's c-ares resolver can be refused by the
 local DNS server for SRV lookups while `nslookup` works fine. Proven by resolving the same
 `_mongodb._tcp.…` record against 8.8.8.8 successfully. Workaround is the optional
-`DNS_SERVERS` variable (`config/db.js` calls `dns.setServers`). Linux hosts such as Render
-do not need it.
+`DNS_SERVERS` variable (`config/db.js` calls `dns.setServers`). Linux hosts such as Railway
+or Zeabur do not need it.
 
 **2. `NODE_TLS_REJECT_UNAUTHORIZED=0` in the system environment.** Not set by this
 project, but it is global: every Node process on that machine skips TLS certificate
-verification. It does not affect deployment (Render has no such variable), and it should be
+verification. It does not affect deployment (PaaS hosts have no such variable), and it should be
 deleted from the machine after the submission.
 
 ---
 
-## Deploy to Render
+## Deploy
 
-1. New → Web Service → connect the repo, **Root Directory** `server`.
-2. Build command `npm install`, start command `npm start`.
-3. Environment: `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN=7d`, `NODE_ENV=production`,
-   `CLIENT_ORIGIN=https://<your-vercel-app>.vercel.app`.
-4. In Atlas → Network Access, keep `0.0.0.0/0` (Render's egress IP is not fixed).
-5. After the first deploy, run the seed once from your machine against the same Atlas
-   database — it is the same cluster, so nothing else is needed.
+Any host that runs a long-lived Node process works: Railway, Zeabur, Koyeb, Northflank,
+Back4App, a VPS, or Render. The repo ships a `Dockerfile`, so the platform does not have to
+guess a build command — point it at `server/` and it builds.
+
+1. Create a **web service** from the GitHub repo with **Root Directory** `server`.
+   Railway/Zeabur detect the `Dockerfile`; on a buildpack host use build `npm ci` and start
+   `npm start`.
+2. Environment variables:
+
+   | key | value |
+   |---|---|
+   | `MONGODB_URI` | your Atlas SRV string, **with** the `/crisfu` database name |
+   | `JWT_SECRET` | a long random string (different from local) |
+   | `JWT_EXPIRES_IN` | `7d` |
+   | `NODE_ENV` | `production` |
+   | `CLIENT_ORIGIN` | the deployed frontend origin, e.g. `https://crisfu.vercel.app` |
+
+3. Health check path: **`/api/health`** — returns `200` with an uptime counter.
+4. In Atlas → Network Access keep `0.0.0.0/0`: PaaS egress IPs are not fixed. Do not set
+   `DNS_SERVERS` on Linux — that workaround is Windows-only.
+5. Seed once from your machine against the same Atlas cluster (`npm run seed`). The database
+   is shared, so the deployed API serves the same records.
+
+`server/railway.toml` already sets the Dockerfile builder, the health-check path and a
+restart policy, so a Railway deploy needs no dashboard tweaking beyond the variables above.
