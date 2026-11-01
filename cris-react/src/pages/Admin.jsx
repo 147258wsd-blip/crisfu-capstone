@@ -165,18 +165,31 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
 
   const dash = useApi(async () => {
-    const [projects, posts, log, counts] = await Promise.all([
+    const [projects, posts, log, counts, inbox] = await Promise.all([
       api.admin.projects(),
       api.admin.posts(),
       api.admin.log(),
       api.admin.counts(),
+      api.contact.list(),
     ]);
-    return { projects, posts, log, counts };
+    return { projects, posts, log, counts, inbox };
   }, []);
 
   const data = dash.data;
   const projects = useMemo(() => (data ? data.projects : []), [data]);
   const posts = useMemo(() => (data ? data.posts : []), [data]);
+  const inbox = useMemo(() => (data ? data.inbox : []), [data]);
+  const unread = useMemo(() => inbox.filter((m) => !m.read).length, [inbox]);
+
+  async function markRead(id) {
+    try {
+      await api.contact.markRead(id);
+      toast("Marked as read");
+      dash.reload();
+    } catch (err) {
+      toast(err.message || "Could not update the message");
+    }
+  }
 
   async function save(payload) {
     const { kind, item } = editing;
@@ -238,6 +251,7 @@ export default function Admin() {
             ["overview", "◈ Overview"],
             ["projects", "▤ Projects"],
             ["posts", "✎ Blog posts"],
+            ["inbox", `✉ Inbox${unread ? ` (${unread})` : ""}`],
           ].map(([key, label]) => (
             <a key={key} className={tab === key ? "on" : undefined} onClick={() => setTab(key)}>
               {label}
@@ -410,6 +424,64 @@ export default function Admin() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+          {data && tab === "inbox" && (
+            <div className="panel">
+              <div className="panel-head">
+                <h2>
+                  Inbox <span style={{ color: "var(--dim)", fontWeight: 400 }}>({inbox.length})</span>
+                </h2>
+                <span className="pill">{unread} unread</span>
+              </div>
+              <div className="panel-body">
+                {inbox.length === 0 ? (
+                  <p className="t-sub" style={{ margin: 0 }}>
+                    Nothing here yet. Messages sent through <code className="code-chip">/contact</code> land in
+                    this list — they are stored in the <code className="code-chip">messages</code> collection.
+                  </p>
+                ) : (
+                  <table className="tbl">
+                    <thead>
+                      <tr>
+                        <th>From</th>
+                        <th>Message</th>
+                        <th>Received</th>
+                        <th>Status</th>
+                        <th />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inbox.map((m) => (
+                        <tr key={m.id}>
+                          <td>
+                            <div className="t-title">{m.name}</div>
+                            <div className="t-sub">{m.email}</div>
+                          </td>
+                          <td style={{ maxWidth: 340, whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.55 }}>
+                            {m.msg}
+                          </td>
+                          <td style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--dim)" }}>{m.at}</td>
+                          <td>
+                            <span className={"pill " + (m.read ? "live" : "draft")}>{m.read ? "read" : "new"}</span>
+                          </td>
+                          <td>
+                            <div className="ops">
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                disabled={m.read}
+                                onClick={() => markRead(m.id)}
+                              >
+                                Mark read
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           )}

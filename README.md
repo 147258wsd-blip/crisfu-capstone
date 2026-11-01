@@ -46,6 +46,43 @@ Pages: `/` home, `/projects` + `/projects/:id`, `/blog` + `/blog/:id`, `/debate`
 
 ---
 
+## API endpoints
+
+Everything is mounted under `/api`; `GET /api` returns this same map at runtime.
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/health` | — | uptime probe |
+| POST | `/users/register` | — | 201 + JWT; 409 on duplicate email or username |
+| POST | `/users/login` | — | one message for both "no such email" and "wrong password" |
+| GET | `/users/me` | Bearer | also the token re-validation call the SPA makes on load |
+| GET | `/projects` | — | `?cat=` filters on the category inside the payload |
+| GET | `/projects/:id` | — | 404 on a malformed id instead of a cast error |
+| POST | `/projects` | Bearer | owner comes from the token, never from the body |
+| PUT/PATCH | `/projects/:id` | Bearer + owner | 403 for anyone else |
+| DELETE | `/projects/:id` | Bearer + owner | |
+| GET | `/blog` | — | author populated |
+| GET | `/blog/:id` | — | includes `commentCount` |
+| POST | `/blog` | Bearer | |
+| PUT/PATCH | `/blog/:id` | Bearer + author | |
+| DELETE | `/blog/:id` | Bearer + author | removes the post's comments with it |
+| GET | `/blog/:postId/comments` | — | populated author |
+| POST | `/blog/:postId/comments` | Bearer | author taken from the token |
+| DELETE | `/blog/:postId/comments/:commentId` | Bearer | comment author or post author |
+| POST | `/contact` | — | 400 on an invalid email |
+| GET | `/contact` | Bearer | admin inbox, newest first |
+| PATCH | `/contact/:id/read` | Bearer | mark one message as read |
+| GET | `/admin/stats` | Bearer | four counters via `countDocuments` |
+| GET | `/admin/activity` | Bearer | merged feed of the 10 newest events |
+
+Errors are always JSON with the same shape:
+
+```json
+{ "success": false, "message": "…", "errors": { "field": "…" } }
+```
+
+---
+
 ## Run it locally
 
 ```bash

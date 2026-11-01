@@ -310,6 +310,35 @@ export const api = {
         return { ok: true };
       }, 520);
     },
+
+    /* the inbox behind /admin — GET /api/contact is protected, so this
+       only works with a token and only for the signed-in account */
+    async list() {
+      if (!USE_MOCK) {
+        const { data } = await http.get("/contact");
+        return unwrap(data, "messages").map(adaptMessage);
+      }
+      return mock(() => {
+        const box = readJSON(OUTBOX, []);
+        return (Array.isArray(box) ? box : []).map((m, i) => ({
+          id: "m" + i,
+          name: m.name || "Anonymous",
+          email: m.email || "",
+          msg: m.msg || m.message || "",
+          read: false,
+          at: m.at || "",
+          createdAt: m.at || null,
+        }));
+      }, 320);
+    },
+
+    async markRead(id) {
+      if (!USE_MOCK) {
+        const { data } = await http.patch(`/contact/${id}/read`);
+        return adaptMessage(data.message || data);
+      }
+      return mock(() => ({ ok: true }), 220);
+    },
   },
 
   /* ---------------- admin ---------------- */

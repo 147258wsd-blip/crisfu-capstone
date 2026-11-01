@@ -262,6 +262,7 @@ export function adaptMessage(raw) {
     name: str(raw.name, "Anonymous"),
     email: str(raw.email),
     msg: str(raw.message || raw.msg),
+    read: Boolean(raw.read),
     at: raw.createdAt ? relativeLabel(raw.createdAt) : str(raw.at, ""),
     createdAt: raw.createdAt || null,
   };
