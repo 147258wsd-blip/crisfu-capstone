@@ -100,9 +100,12 @@ curl -I https://<你的地址>/portfolio    # 200 + text/html（SPA 路由不 40
 |---|---|
 | 整个域名 404 / 403 | 认证方式选了「签名认证」，改成**无需认证** |
 | 首页能开，接口 503 | `MONGODB_URI` 少了 `/crisfu`，或 Atlas 白名单不是 `0.0.0.0/0` |
-| 打开域名返回纯文本 `Internal Server Error`（HTTP 502，50ms 内返回） | Handler 写成了 `index.handler` 或 `fc.handler`。压缩包里 handler 位于 `api/fc.js`，必须填 **`api/fc.handler`**。改完保存 5~10 秒生效，不用重新上传 |
+| 打开域名返回纯文本 `Internal Server Error`（HTTP 502，50ms 内返回） | Handler 指向的文件不存在。压缩包里真正的入口是 `api/fc.js`，新版包在根目录另加了 `fc.js` / `index.js` 两个转发文件，因此 `fc.handler`、`index.handler`、`api/fc.handler` 三种写法都能解析；若仍是 502，说明包是旧版，重新 `npm run pack:fc` 上传 |
+| 请求 30 秒后超时 | 冷启动连 Atlas 慢，把执行超时设成 30 秒；仍超时就检查 Atlas 白名单是否为 `0.0.0.0/0` |
 | 报 `Cannot find module 'api/fc'` | 上传的 zip 不是最新版，重新 `npm run pack:fc` 再上传 |
-| 前 30 秒超时 | 冷启动连 Atlas 慢，把执行超时加到 30 秒；仍超时就查白名单 |
+| 登录（正确密码）返回 500 `Something went wrong on the server.` | `JWT_EXPIRES_IN` 的值含隐形字符（结尾空格、全角字母、写成「7 天」）。**直接把这条变量删掉**，代码里默认就是 `7d` |
+| 改了环境变量但行为没变 | FC 的环境变量只在实例启动时注入，保存后必须点「部署代码」重启；用 `/api/health` 的 `uptime` 是否归零判断有没有真的重启 |
+| 想看到真实的错误原因 | 临时把 `NODE_ENV` 改成 `development` 并部署，500 响应会带 `stack` 字段；查完**立刻改回 `production`** |
 | 页面白屏 | zip 是旧的，重新 `npm run pack:fc` 再上传 |
 | 第一次访问慢 1~3 秒 | 正常的冷启动，之后快；演示前自己先点一遍预热 |
 

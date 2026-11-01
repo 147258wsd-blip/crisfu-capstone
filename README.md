@@ -12,11 +12,11 @@ instance, so they are two addresses on one host:
 
 | What | URL |
 |---|---|
-| Front-end (React, `npm run build`) | `https://<trigger-id>.<region>.fcapp.run` |
-| Back-end API | `https://<trigger-id>.<region>.fcapp.run/api` |
+| Front-end (React, `npm run build`) | `https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run` |
+| Back-end API | `https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api` |
 
-Replace `<trigger-id>.<region>` with the value shown under *Trigger → Configuration* in the
-FC console.
+Both are live. The API answers `GET /api/health`, and the site is the Vite build served by the
+same function.
 
 Why one host instead of two: the free tier gives a single container, so the compiled site is
 served by the same process as the API (`server/api/fc.js` reads `public/` for every non-`/api`
@@ -27,9 +27,9 @@ That is also why there are no CORS settings to get wrong.
 Verification:
 
 ```bash
-curl https://<host>/api/health     # {"success":true,"status":"ok",...}
-curl https://<host>/api/projects   # {"success":true,"count":6,"data":[...]}
-curl -I https://<host>/portfolio   # 200 text/html — SPA route, not a 404
+curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/health     # {"success":true,"status":"ok",...}
+curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/projects   # {"success":true,"count":6,...}
+curl -I https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/portfolio   # 200 text/html — SPA route, not a 404
 ```
 
 ---
