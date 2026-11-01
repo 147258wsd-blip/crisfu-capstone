@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "Capstone backend — Express + MongoDB Atlas + Mongoose",
   "main": "server.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node seed.js",
     "test:api": "node scripts/test-api.js",
+    "test:serverless": "node scripts/test-serverless.js",
     "clean:test": "node scripts/clean-test.js"
   },
   "keywords": [],

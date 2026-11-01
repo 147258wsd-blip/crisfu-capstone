@@ -153,9 +153,20 @@ deleted from the machine after the submission.
 
 ## Deploy
 
-Any host that runs a long-lived Node process works: Railway, Zeabur, Koyeb, Northflank,
-Back4App, a VPS, or Render. The repo ships a `Dockerfile`, so the platform does not have to
-guess a build command — point it at `server/` and it builds.
+The same Express app ships in two shapes.
+
+**Serverless (Vercel).** `api/index.js` serves `GET /api`, `api/[...slug].js` serves
+everything below it. Both delegate to `api/_app.js`, which does the one thing Express
+cannot do on its own: reuse the Mongoose connection across invocations of a warm instance,
+so a burst of traffic does not open a connection per request. Project settings are Root
+Directory `server`, framework `Other`, no build command. `npm run test:serverless` runs the
+whole surface through that wrapper against the real Atlas cluster before you deploy.
+
+**Long-lived process (Docker, VPS, Railway, Koyeb, …).** The repo ships a `Dockerfile`, so
+the platform does not have to guess a build command — point it at `server/` and it builds,
+then `server.js` calls `app.listen`.
+
+Steps that apply to either shape:
 
 1. Create a **web service** from the GitHub repo with **Root Directory** `server`.
    Railway/Zeabur detect the `Dockerfile`; on a buildpack host use build `npm ci` and start
@@ -176,5 +187,6 @@ guess a build command — point it at `server/` and it builds.
 5. Seed once from your machine against the same Atlas cluster (`npm run seed`). The database
    is shared, so the deployed API serves the same records.
 
-`server/railway.toml` already sets the Dockerfile builder, the health-check path and a
-restart policy, so a Railway deploy needs no dashboard tweaking beyond the variables above.
+`server/railway.toml` is only read on the container path — it pins the Dockerfile builder,
+the health-check path and a restart policy, so such a host needs no dashboard tweaking
+beyond the variables above. On Vercel the file is ignored.
