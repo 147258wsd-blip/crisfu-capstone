@@ -22,6 +22,19 @@
 
 const str = (v, d = "") => (v == null || v === "" ? d : String(v));
 
+/* Project covers are stored in the database as "/shots/xxx.png". That is
+   correct when the site is served from the domain root, but a GitHub Pages
+   project site lives under /<repo>/, so an absolute path would 404. Prefix
+   relative paths with the build-time base; leave full URLs alone. */
+const BASE = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+
+export function assetUrl(u) {
+  const raw = str(u);
+  if (!raw) return "";
+  if (/^(https?:)?\/\//i.test(raw) || raw.startsWith("data:")) return raw;
+  return `${BASE}/${raw.replace(/^\/+/, "")}`;
+}
+
 /* list payloads may arrive as [] or { projects: [] } / { posts: [] } */
 export function unwrap(data, key) {
   if (Array.isArray(data)) return data;
@@ -122,7 +135,7 @@ export function adaptProject(raw) {
     learned: str(d.learned),
     demo: str(raw.liveUrl || d.demo),
     source: str(raw.repoUrl || d.source),
-    imageUrl: str(raw.imageUrl || d.imageUrl),
+    imageUrl: assetUrl(raw.imageUrl || d.imageUrl),
     owner: authorName(raw.user, ""),
     status: str(d.status, raw.status || "live"),
     createdAt: raw.createdAt || null,
