@@ -90,6 +90,27 @@ function copyBuild() {
   fs.cpSync(dist, path.join(STAGE, "public"), { recursive: true });
 }
 
+/**
+ * FC resolves `<file>.<export>` relative to the code root. The real handler
+ * lives at `api/fc.js`, but a handler name typed in the console is easy to get
+ * wrong (`index.handler` is the default, and a stale one survives a save on
+ * some pages), and a wrong name only surfaces as an opaque 502.
+ *
+ * Two one-line shims at the root make every plausible name resolve to the same
+ * file, so the deployment cannot be broken by that field:
+ *
+ *   index.handler    -> index.js
+ *   fc.handler       -> fc.js
+ *   api/fc.handler   -> api/fc.js
+ */
+function writeHandlerShims() {
+  const shim = '/* alias so `fc.handler` and `index.handler` both resolve */\nmodule.exports = require("./api/fc");\n';
+  for (const name of ["fc.js", "index.js"]) {
+    fs.writeFileSync(path.join(STAGE, name), shim);
+  }
+  log("wrote handler aliases: fc.js, index.js");
+}
+
 function zip() {
   rmrf(ZIP);
   log("zipping");
@@ -125,7 +146,7 @@ function report() {
   log(`done: ${path.relative(REPO_DIR, ZIP)}  (${mb} MB, ${files} files)`);
   log("console settings:");
   console.log("       运行环境   Node.js 20");
-  console.log("       处理器     api/fc.handler");
+  console.log("       处理器     fc.handler（api/fc.handler、index.handler 也都可用）");
   console.log("       内存/超时  512 MB / 30 秒");
   console.log("       触发器     HTTP 触发器，认证方式选「无需认证」");
   if (size > 100 * 1024 * 1024) {
@@ -150,6 +171,7 @@ function main() {
   buildFrontend();
   copyServer();
   copyBuild();
+  writeHandlerShims();
   zip();
   report();
 }
