@@ -9,11 +9,13 @@
  * Layout produced:
  *
  *   fc-api.zip
- *   ├── fc.js            <- handler: fc.handler
- *   ├── api/             <- _app.js (shared with Vercel) + _fc-response.js
+ *   ├── api/fc.js        <- the handler: api/fc.handler
+ *   ├── api/_app.js      <- shared with the Vercel entry point
+ *   ├── api/_fc-response.js
  *   ├── config/ models/ controllers/ routes/ middleware/ utils/
  *   ├── node_modules/    <- production dependencies, offline copy
- *   └── public/          <- Vite build, served by fc.js
+ *   ├── public/          <- Vite build, served by api/fc.js
+ *   └── package.json
  *
  * Usage (from server/):
  *   npm run pack:fc              rebuild the frontend, then zip
@@ -123,7 +125,7 @@ function report() {
   log(`done: ${path.relative(REPO_DIR, ZIP)}  (${mb} MB, ${files} files)`);
   log("console settings:");
   console.log("       运行环境   Node.js 20");
-  console.log("       处理器     fc.handler");
+  console.log("       处理器     api/fc.handler");
   console.log("       内存/超时  512 MB / 30 秒");
   console.log("       触发器     HTTP 触发器，认证方式选「无需认证」");
   if (size > 100 * 1024 * 1024) {

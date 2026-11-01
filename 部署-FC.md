@@ -43,7 +43,7 @@ npm run pack:fc
 | 运行环境 | **Node.js 20**（内置运行时，不要选自定义运行时） |
 | 函数类型 | **事件函数**（处理 HTTP 请求） |
 | 代码上传方式 | **通过 ZIP 包上传代码** → 选 `fc-api.zip` |
-| 处理器（Handler） | `fc.handler` |
+| 处理器（Handler） | **`api/fc.handler`**（注意前面的 `api/`，handler 文件在 `api/` 目录里） |
 | 内存规格 | **512 MB** |
 | 执行超时时间 | **30 秒** |
 | 实例并发度 | 1（默认） |
@@ -100,7 +100,8 @@ curl -I https://<你的地址>/portfolio    # 200 + text/html（SPA 路由不 40
 |---|---|
 | 整个域名 404 / 403 | 认证方式选了「签名认证」，改成**无需认证** |
 | 首页能开，接口 503 | `MONGODB_URI` 少了 `/crisfu`，或 Atlas 白名单不是 `0.0.0.0/0` |
-| 报 `Cannot find module 'fc'` | Handler 写成了 `index.handler`，要填 **`fc.handler`** |
+| 打开域名返回纯文本 `Internal Server Error`（HTTP 502，50ms 内返回） | Handler 写成了 `index.handler` 或 `fc.handler`。压缩包里 handler 位于 `api/fc.js`，必须填 **`api/fc.handler`**。改完保存 5~10 秒生效，不用重新上传 |
+| 报 `Cannot find module 'api/fc'` | 上传的 zip 不是最新版，重新 `npm run pack:fc` 再上传 |
 | 前 30 秒超时 | 冷启动连 Atlas 慢，把执行超时加到 30 秒；仍超时就查白名单 |
 | 页面白屏 | zip 是旧的，重新 `npm run pack:fc` 再上传 |
 | 第一次访问慢 1~3 秒 | 正常的冷启动，之后快；演示前自己先点一遍预热 |

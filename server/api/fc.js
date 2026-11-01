@@ -16,7 +16,9 @@
  *      very same handler Vercel uses (`api/_app.js`), so routing, auth,
  *      validation and error shapes stay identical to local development.
  *
- * Handler name in the FC console: `fc.handler`.
+ * Handler name in the FC console: `api/fc.handler` — the file keeps its
+ * `api/` prefix because every other entry point lives there, and because
+ * STATIC_ROOT below resolves `..` from this file's directory.
  */
 
 const path = require("path");
