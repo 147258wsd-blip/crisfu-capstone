@@ -11,7 +11,7 @@
     "build:mock": "vite build --mode mock --outDir dist-mock",
     "preview": "vite preview --port 4173",
     "preview:mock": "vite preview --port 4174 --outDir dist-mock",
-    "publish:pages": "node scripts/publish-pages.js",
+    "publish:pages": "node scripts/publish-pages.cjs",
     "smoke": "node scripts/smoke.cjs",
     "smoke:real": "node scripts/smoke-real.cjs",
     "check-api": "node scripts/check-api.cjs",

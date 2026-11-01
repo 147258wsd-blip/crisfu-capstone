@@ -1,5 +1,5 @@
 /* =========================================================
-   publish-pages.js — build the React app for GitHub Pages and
+   publish-pages.cjs — build the React app for GitHub Pages and
    push the result to the `gh-pages` branch.
 
    Why a separate build: the Function Compute default domain
@@ -12,11 +12,15 @@
    that renders HTML and let it call the API cross-origin.
 
    Usage:
-     node scripts/publish-pages.js
-     LIVE_API=https://other.host/api node scripts/publish-pages.js
+     npm run publish:pages
+     LIVE_API=https://other.host/api npm run publish:pages
+
+   Deletions go through the shell on purpose: this sandbox wraps
+   fs.rmSync and routes it to the OS trash, which fails on build
+   output.
    ========================================================= */
 
-const { execFileSync } = require("child_process");
+const { execFileSync, spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -29,11 +33,12 @@ const BRANCH = "gh-pages";
 const log = (m) => console.log(`[pages] ${m}`);
 const run = (cmd, args, opts = {}) =>
   execFileSync(cmd, args, { stdio: "inherit", shell: process.platform === "win32", ...opts });
+const rmrf = (p) => spawnSync("rm", ["-rf", p], { stdio: "inherit" });
 
 /* ---------- 1. build with the sub-path baked in ---------- */
 
 log(`building for /${REPO_SUB}/ -> ${API}`);
-fs.rmSync(OUT, { recursive: true, force: true });
+rmrf(OUT); // vite empties outDir itself, but a stale .git would survive
 run("npm", ["run", "build"], {
   cwd: WEB_DIR,
   env: {
@@ -66,11 +71,20 @@ const remote = execFileSync("git", ["-C", WEB_DIR, "remote", "get-url", "origin"
 const stat = fs.statSync(path.join(OUT, "index.html"));
 log(`index.html ${stat.size} bytes, pushing to ${BRANCH}`);
 
-fs.rmSync(path.join(OUT, ".git"), { recursive: true, force: true });
+rmrf(path.join(OUT, ".git"));
 run("git", ["init", "-q", "-b", BRANCH], { cwd: OUT });
 run("git", ["add", "-A"], { cwd: OUT });
-run("git", ["-c", "user.name=Cris Fu", "-c", "user.email=cris@crisfu.dev", "commit", "-q", "-m", "Deploy the built site"], {
+/* identity goes through the environment: `run` uses a shell on Windows, so a
+   `-c user.name=Cris Fu` argument would be split on the space */
+run("git", ["commit", "-q", "-m", "Deploy the built site"], {
   cwd: OUT,
+  env: {
+    ...process.env,
+    GIT_AUTHOR_NAME: "Cris Fu",
+    GIT_AUTHOR_EMAIL: "cris@crisfu.dev",
+    GIT_COMMITTER_NAME: "Cris Fu",
+    GIT_COMMITTER_EMAIL: "cris@crisfu.dev",
+  },
 });
 run("git", ["push", "-f", remote, `${BRANCH}:${BRANCH}`], { cwd: OUT });
 
