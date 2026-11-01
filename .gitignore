@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+dist-mock/
+
+# secrets — never commit these
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+
+# editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# tooling session data
+.workbuddy/
+tmp/
+
+# early static prototype, superseded by cris-react
+cris-site/
+
+# design docs and exports
+output/

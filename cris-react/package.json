@@ -1,0 +1,29 @@
+{
+  "name": "crisfu-site",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cris Fu - portfolio & blog, React SPA (Capstone frontend)",
+  "scripts": {
+    "dev": "vite",
+    "dev:mock": "vite --mode mock",
+    "build": "vite build",
+    "build:mock": "vite build --mode mock --outDir dist-mock",
+    "preview": "vite preview --port 4173",
+    "preview:mock": "vite preview --port 4174 --outDir dist-mock",
+    "smoke": "node scripts/smoke.cjs",
+    "smoke:real": "node scripts/smoke-real.cjs",
+    "check-api": "node scripts/check-api.cjs",
+    "test:api": "node ../server/scripts/test-api.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}
