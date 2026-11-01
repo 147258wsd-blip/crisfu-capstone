@@ -18,27 +18,17 @@ Render 注册被卡在信用卡/手机验证，不再走它。本手册用 **Rai
 
 ---
 
-## 第 1 步：把代码推到 GitHub
+## 第 1 步：把代码推到 GitHub ✅ 已完成
 
-本地仓库已经建好并提交了（分支 `main`，首次提交 `eec5b83`），只差一个远端。
-
-1. 打开 <https://github.com/new>
-2. **Repository name** 填 `crisfu-capstone`
-3. 选 **Public**（Private 也能部署，但 Railway 授权时多一步）
-4. **不要**勾选 "Add a README file" / ".gitignore" / "license"——仓库必须是空的
-5. 点 **Create repository**
-6. 页面会出现一把仓库地址，形如 `https://github.com/<你的用户名>/crisfu-capstone.git`
-
-拿到地址后执行（把 `<你的用户名>` 换成实际值）：
+仓库已上线：<https://github.com/147258wsd-blip/crisfu-capstone>（Public，`main` 分支）。
+后续改动只需：
 
 ```bash
 cd /c/Users/Lenovo/WorkBuddy/2026-10-30-09-34-47
-git remote add origin https://github.com/<你的用户名>/crisfu-capstone.git
-git push -u origin main
+git add -A && git commit -m "说明改了什么" && git push
 ```
 
-第一次 push 会弹出 GitHub 登录窗口，浏览器授权一次即可。成功标志是仓库页面上能看到
-`server/` 和 `cris-react/` 两个目录。
+Railway 和 Vercel 都会监听 `main`，推上去即自动重新部署。
 
 ---
 
@@ -134,6 +124,6 @@ git push -u origin main
 
 - [ ] 前端 URL：`https://__________.vercel.app`
 - [ ] 后端 URL：`https://__________.up.railway.app`
-- [ ] 仓库 URL：`https://github.com/__________/crisfu-capstone`
+- [x] 仓库 URL：`https://github.com/147258wsd-blip/crisfu-capstone`
 - [ ] `StudentID_StudentName_CapstoneProject.zip`（剔除 `node_modules`、`dist`、`.env`）
 - [ ] README 里 endpoint 列表与实际路由一致
