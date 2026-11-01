@@ -32,6 +32,7 @@ tests create and leaves the seeded content untouched.
 | `PORT` | no | default `5000` |
 | `NODE_ENV` | no | `production` hides stack traces and switches logs to `combined` |
 | `CLIENT_ORIGIN` | no | comma-separated frontend origins; `localhost` and `*.vercel.app` are always allowed |
+| `SERVE_STATIC` | no | folder (relative to `server/`) holding a built SPA; when set, the same process serves the site and the API from one origin |
 | `DNS_SERVERS` | no | Windows only — see *Two problems worth knowing* below |
 
 ---

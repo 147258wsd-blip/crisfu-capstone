@@ -1,6 +1,9 @@
 require("dotenv").config();
 require("express-async-errors");
 
+const path = require("path");
+const fs = require("fs");
+
 const express = require("express");
 const helmet = require("helmet");
 const cors = require("cors");
@@ -10,12 +13,24 @@ const { connectDB } = require("./config/db");
 const routes = require("./routes");
 const { notFound, errorHandler } = require("./middleware/error");
 
+/* Optional: serve the built frontend from this very process. The container
+   image sets SERVE_STATIC=public so one URL carries both the site and the
+   API; a plain API deployment leaves it unset and behaviour is unchanged. */
+const publicDir = (() => {
+  const rel = process.env.SERVE_STATIC;
+  if (!rel) return null;
+  const abs = path.resolve(__dirname, rel);
+  return fs.existsSync(path.join(abs, "index.html")) ? abs : null;
+})();
+
 const app = express();
 
 /* ---------- security & plumbing ---------- */
 
-/* the API only speaks JSON, so the strict defaults cost us nothing */
-app.use(helmet());
+/* the API only speaks JSON, so the strict defaults cost us nothing.
+   When this process also hosts the SPA, the default CSP would block the
+   inline bits of index.html, so it is turned off for that mode only. */
+app.use(helmet({ contentSecurityPolicy: publicDir ? false : undefined }));
 
 /* Vite dev (5173), vite preview (4173) and anything listed in
    CLIENT_ORIGIN are allowed; `*` is the fallback for a fresh deployment
@@ -59,9 +74,31 @@ app.use("/api", (req, res, next) => {
 app.use("/api", routes);
 
 /* a plain root so hitting the deployed URL in a browser is not a 404 */
-app.get("/", (req, res) => {
-  res.json({ success: true, message: "Cris Fu API is running.", docs: "/api" });
-});
+if (publicDir) {
+  /* hashed assets can be cached hard; index.html never */
+  app.use(
+    express.static(publicDir, {
+      index: false,
+      setHeaders(res, filePath) {
+        if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+          res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      },
+    })
+  );
+
+  /* client-side routes (/portfolio, /blog/:id, …) are not files —
+     hand every non-API GET to the SPA and let React Router decide. */
+  app.use((req, res, next) => {
+    if (req.method !== "GET" && req.method !== "HEAD") return next();
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(publicDir, "index.html"));
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.json({ success: true, message: "Cris Fu API is running.", docs: "/api" });
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);

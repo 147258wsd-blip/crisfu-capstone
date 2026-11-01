@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/dist-mock
+**/.git
+.gitignore
+*.md
+!README.md
+**/.env
+**/.env.local
+**/.env.mock
+crisfu.tar.gz
+output
+deploy
+.workbuddy
