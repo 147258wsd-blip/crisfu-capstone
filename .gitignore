@@ -29,3 +29,7 @@ cris-site/
 
 # design docs and exports
 output/
+
+# FC packaging output
+fc-build/
+fc-api.zip
