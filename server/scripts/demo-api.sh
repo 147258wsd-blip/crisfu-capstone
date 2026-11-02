@@ -133,7 +133,14 @@ req POST /users/register "{\"username\":\"demorunner\",\"email\":\"$SECOND_EMAIL
 if [ "$CODE" = "409" ]; then
   req POST /users/login "{\"email\":\"$SECOND_EMAIL\",\"password\":\"$SECOND_PASS\"}"
 fi
-expect 201
+# 201 on the first run, 409 → login → 200 on every later run
+if [ "$CODE" = "201" ]; then
+  printf '   %sHTTP 201 ✓ (second account registered)%s\n' "$OK" "$C_OFF"
+elif [ "$CODE" = "200" ]; then
+  printf '   %sHTTP 200 ✓ (second account already exists, logged in instead)%s\n' "$OK" "$C_OFF"
+else
+  printf '   %sHTTP %s ✗%s\n' "$BAD" "$CODE" "$C_OFF"
+fi
 OTHER=$(printf '%s' "$BODY" | jget token)
 req DELETE "/projects/$NEWID" "" "$OTHER"
 expect 403; show 160
