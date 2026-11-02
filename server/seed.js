@@ -75,9 +75,14 @@ async function seed() {
 
   let owner = await User.findOne({ email: OWNER.email });
   if (!owner) {
-    owner = await User.create(OWNER);
+    owner = await User.create({ ...OWNER, role: "admin" });
     console.log(`[seed] created owner ${OWNER.email} (password: ${OWNER.password})`);
   } else {
+    /* the account may predate the role column, or have been demoted by hand */
+    if (owner.role !== "admin") {
+      owner.role = "admin";
+      await owner.save();
+    }
     console.log(`[seed] reusing owner ${OWNER.email}`);
   }
 

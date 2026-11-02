@@ -2,6 +2,11 @@
    Express server and the real Atlas cluster — no mocks, no fakes.
    Usage:  npm run test:api      (server must be running on PORT) */
 
+require("dotenv").config();
+
+const mongoose = require("mongoose");
+const { connectDB } = require("../config/db");
+
 /* 127.0.0.1 rather than localhost: on Windows `localhost` can resolve to ::1
    while the server listens on IPv4, and the failure looks like a dead server */
 const BASE = process.env.API_BASE || `http://127.0.0.1:${process.env.PORT || 5000}/api`;
@@ -44,6 +49,40 @@ async function call(method, path, { token, body } = {}) {
    millisecond with the same random suffix collide on the unique index */
 let seq = 0;
 const unique = () => `test${Date.now()}${seq++}`;
+
+/* ---- role promotion ----
+   Registration always hands out `member`, which is exactly what the tests
+   assert first. To exercise the write path afterwards the two throwaway
+   accounts have to become admins, and the only honest way to do that from
+   outside the API is the database itself. One connection, reused. */
+let dbReady = false;
+
+async function openDb() {
+  if (dbReady) return true;
+  if (!process.env.MONGODB_URI) return false;
+  try {
+    /* the project's own connector, because it applies DNS_SERVERS — a raw
+       mongoose.connect here fails on Windows with a refused SRV lookup */
+    await connectDB();
+    dbReady = true;
+    return true;
+  } catch (err) {
+    console.log(`  note: no database connection (${err.message}) — test accounts stay members`);
+    return false;
+  }
+}
+
+async function promote(email) {
+  if (!(await openDb())) return false;
+  const res = await mongoose.connection.collection("users").updateOne({ email }, { $set: { role: "admin" } });
+  return res.matchedCount === 1;
+}
+
+async function closeDb() {
+  if (!dbReady) return;
+  dbReady = false;
+  await mongoose.disconnect();
+}
 
 async function run() {
   console.log(`\nAPI: ${BASE}\n`);
@@ -123,6 +162,50 @@ async function run() {
     const second = await call("POST", "/users/register", { body: bob });
     bobToken = second.body.token || "";
     check("second account registered", second.status === 201 && !!bobToken);
+  }
+
+  /* The hole this section exists to keep closed: a fresh account used to be
+     able to read the inbox and publish to the portfolio, because a valid
+     token was the only thing any write endpoint asked for. */
+  console.log("\nroles: a member may read, not write");
+  {
+    const fakeRole = await call("POST", "/users/register", {
+      body: { username: unique(), email: `${unique()}@test.dev`, password: "secret123", role: "admin" },
+    });
+    check(
+      'a "role":"admin" body is ignored on register',
+      fakeRole.status === 201 && fakeRole.body.user.role === "member",
+      `role ${fakeRole.body.user && fakeRole.body.user.role}`
+    );
+
+    const memberProject = await call("POST", "/projects", {
+      token: aliceToken,
+      body: { title: "Member attempt " + unique(), description: "x" },
+    });
+    check("member cannot create a project -> 403", memberProject.status === 403, `status ${memberProject.status}`);
+
+    const memberInbox = await call("GET", "/contact", { token: aliceToken });
+    check("member cannot read the contact inbox -> 403", memberInbox.status === 403, `status ${memberInbox.status}`);
+
+    const memberStats = await call("GET", "/admin/stats", { token: aliceToken });
+    check("member cannot read admin stats -> 403", memberStats.status === 403, `status ${memberStats.status}`);
+
+    const memberSkill = await call("POST", "/skills", {
+      token: aliceToken,
+      body: { name: "Member skill", category: "Tools" },
+    });
+    check("member cannot create a skill -> 403", memberSkill.status === 403, `status ${memberSkill.status}`);
+
+    /* promotion, then the same token must start working — `protect` re-reads
+       the user on every request, so no new login is needed */
+    const promoted = (await promote(alice.email)) && (await promote(bob.email));
+    check("test accounts promoted to admin", promoted, "no database connection");
+
+    const nowStats = await call("GET", "/admin/stats", { token: aliceToken });
+    check("promoted account reads admin stats", nowStats.status === 200 && typeof nowStats.body.projects === "number");
+
+    const nowInbox = await call("GET", "/contact", { token: aliceToken });
+    check("promoted account reads the inbox", nowInbox.status === 200 && Array.isArray(nowInbox.body.messages));
   }
 
   console.log("\nprojects write path");
@@ -306,13 +389,19 @@ async function run() {
   }
 
   console.log(`\n${fail === 0 ? "ALL PASS" : "FAILURES"}: ${pass} passed, ${fail} failed`);
+  await closeDb();
   if (fail) {
     console.log("failed:", failures.join(" | "));
     process.exit(1);
   }
 }
 
-run().catch((err) => {
+run().catch(async (err) => {
   console.error("test run crashed:", err.message);
+  try {
+    await closeDb();
+  } catch (e) {
+    /* already closed */
+  }
   process.exit(1);
 });

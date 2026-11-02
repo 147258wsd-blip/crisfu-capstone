@@ -60,43 +60,72 @@ Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also 
 | `cris-react/` | The client folder — React 18 + Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. |
 
 Pages: `/` home, `/projects` + `/projects/:id`, `/blog` + `/blog/:id`, `/debate`, `/contact`,
-`/login`, `/register`, `/admin` (protected).
+`/login`, `/register`, `/admin` (admin only — a member who signs in gets an explanation page).
+
+---
+
+## Who can write
+
+Registration is public because the spec asks for it, but registering does not make you an author.
+`User.role` is `member` by default and `admin` only for the addresses in `ADMIN_EMAILS`; the value
+comes from the server, never from the request body, so `{"role":"admin"}` in a signup payload is
+ignored.
+
+| | member (a visitor who registered) | admin (the author account) |
+|---|---|---|
+| read projects / skills / posts / comments | yes | yes |
+| comment on a post | yes | yes |
+| create / edit / delete content | **403** | yes, for records they own |
+| read the contact inbox, `/admin/stats` | **403** | yes |
+
+Two gates run in order: `protect` (is this a real session?) then `requireAdmin` (may this account
+write?), and `owns` still runs underneath so even an admin cannot edit a record another author
+created. This is why a fresh account sees a plain "this dashboard is the author's" page instead of
+a dashboard of somebody else's numbers.
+
+To promote an existing account (or list who currently can write):
+
+```bash
+cd server && npm run set:admin -- --list
+cd server && npm run set:admin -- someone@example.com
+```
 
 ---
 
 ## API endpoints
 
 Everything is mounted under `/api`; `GET /api` returns this same map at runtime.
+**Bearer** = any signed-in account · **Admin** = `role: "admin"` only (a member gets 403).
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
 | GET | `/health` | — | uptime probe |
-| POST | `/users/register` | — | 201 + JWT; 409 on duplicate email or username |
+| POST | `/users/register` | — | 201 + JWT; creates a `member`; 409 on duplicate email or username |
 | POST | `/users/login` | — | one message for both "no such email" and "wrong password" |
-| GET | `/users/me` | Bearer | also the token re-validation call the SPA makes on load |
+| GET | `/users/me` | Bearer | also the token re-validation call the SPA makes on load; includes `role` |
 | GET | `/projects` | — | `?cat=` filters on the category inside the payload |
 | GET | `/projects/:id` | — | 404 on a malformed id instead of a cast error |
-| POST | `/projects` | Bearer | owner comes from the token, never from the body |
-| PUT/PATCH | `/projects/:id` | Bearer + owner | 403 for anyone else |
-| DELETE | `/projects/:id` | Bearer + owner | |
+| POST | `/projects` | Admin | owner comes from the token, never from the body |
+| PUT/PATCH | `/projects/:id` | Admin + owner | 403 for anyone else |
+| DELETE | `/projects/:id` | Admin + owner | |
 | GET | `/skills` | — | `?category=` and `?minLevel=` filter; sorted by category then `order` |
 | GET | `/skills/:id` | — | 404 on a malformed id |
-| POST | `/skills` | Bearer | level must be 1–5, category from a fixed list |
-| PUT/PATCH | `/skills/:id` | Bearer + owner | 403 for anyone else |
-| DELETE | `/skills/:id` | Bearer + owner | |
+| POST | `/skills` | Admin | level must be 1–5, category from a fixed list |
+| PUT/PATCH | `/skills/:id` | Admin + owner | 403 for anyone else |
+| DELETE | `/skills/:id` | Admin + owner | |
 | GET | `/blog` | — | author populated |
 | GET | `/blog/:id` | — | includes `commentCount` |
-| POST | `/blog` | Bearer | |
-| PUT/PATCH | `/blog/:id` | Bearer + author | |
-| DELETE | `/blog/:id` | Bearer + author | removes the post's comments with it |
+| POST | `/blog` | Admin | |
+| PUT/PATCH | `/blog/:id` | Admin + author | |
+| DELETE | `/blog/:id` | Admin + author | removes the post's comments with it |
 | GET | `/blog/:postId/comments` | — | populated author |
-| POST | `/blog/:postId/comments` | Bearer | author taken from the token |
+| POST | `/blog/:postId/comments` | Bearer | author taken from the token — commenting is the one write a member may make |
 | DELETE | `/blog/:postId/comments/:commentId` | Bearer | comment author or post author |
 | POST | `/contact` | — | 400 on an invalid email |
-| GET | `/contact` | Bearer | admin inbox, newest first |
-| PUT/PATCH | `/contact/:id/read` | Bearer | mark one message as read. The client sends **PUT**: the Function Compute HTTP trigger rejects PATCH at the gateway (403) before Express sees it, so both verbs point at the same handler. |
-| GET | `/admin/stats` | Bearer | five counters via `countDocuments` |
-| GET | `/admin/activity` | Bearer | merged feed of the 10 newest events |
+| GET | `/contact` | Admin | inbox, newest first — other people's names and addresses |
+| PUT/PATCH | `/contact/:id/read` | Admin | mark one message as read. The client sends **PUT**: the Function Compute HTTP trigger rejects PATCH at the gateway (403) before Express sees it, so both verbs point at the same handler. |
+| GET | `/admin/stats` | Admin | five counters via `countDocuments` |
+| GET | `/admin/activity` | Admin | merged feed of the 10 newest events |
 
 Errors are always JSON with the same shape:
 

@@ -34,9 +34,10 @@ export default function Login() {
     if (!EMAIL_RE.test(email.trim()) || password.length < 6) return;
 
     try {
-      await login({ email: email.trim(), password });
+      const session = await login({ email: email.trim(), password });
       toast("Signed in");
-      navigate(next, { replace: true });
+      /* a reader has no dashboard, so do not drop them on a 403 page */
+      navigate(session && session.role === "admin" ? next : next.replace(/^\/admin/, "/") || "/", { replace: true });
     } catch (err) {
       /* the message is already rendered from context */
     }

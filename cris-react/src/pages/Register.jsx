@@ -33,9 +33,10 @@ export default function Register() {
     if (bad.name || bad.email || bad.password || bad.confirm) return;
 
     try {
-      await register({ name: form.name.trim(), email: form.email.trim(), password: form.password });
-      toast("Account created");
-      navigate("/admin", { replace: true });
+      const session = await register({ name: form.name.trim(), email: form.email.trim(), password: form.password });
+      toast(session && session.role === "admin" ? "Account created" : "Account created — you can comment now");
+      /* only the author account has a dashboard to land on */
+      navigate(session && session.role === "admin" ? "/admin" : "/", { replace: true });
     } catch (err) {
       /* rendered from context */
     }
@@ -46,7 +47,7 @@ export default function Register() {
       <div className="auth-wrap">
         <div className="auth-card">
           <h1>Create an account</h1>
-          <p className="sub">Needed to comment on posts and open the admin area.</p>
+          <p className="sub">Needed to comment on posts. Publishing stays with the author.</p>
 
           {error && (
             <div className="form-error" role="alert">

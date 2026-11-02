@@ -30,6 +30,7 @@ tests create and leaves the seeded content untouched.
 | `JWT_SECRET` | yes | long random string; changing it invalidates every issued token |
 | `JWT_EXPIRES_IN` | no | default `7d` |
 | `PORT` | no | default `5000` |
+| `ADMIN_EMAILS` | recommended | comma-separated addresses that register as `admin`; everyone else becomes `member`. Exact addresses only, no wildcard |
 | `NODE_ENV` | no | `production` hides stack traces and switches logs to `combined` |
 | `CLIENT_ORIGIN` | no | comma-separated frontend origins; `localhost` and `*.vercel.app` are always allowed |
 | `SERVE_STATIC` | no | folder (relative to `server/`) holding a built SPA; when set, the same process serves the site and the API from one origin |
@@ -100,27 +101,27 @@ All under `/api`. `GET /api` returns this map at runtime.
 | GET | `/users/me` | Bearer | also the token re-validation call the SPA makes on load |
 | GET | `/projects` | — | `?cat=` filters on the category inside the payload |
 | GET | `/projects/:id` | — | 404 on a malformed id rather than a cast error |
-| POST | `/projects` | Bearer | owner taken from the token, never the body |
-| PUT/PATCH | `/projects/:id` | Bearer + owner | 403 for anyone else |
-| DELETE | `/projects/:id` | Bearer + owner | |
+| POST | `/projects` | Admin | owner taken from the token, never the body |
+| PUT/PATCH | `/projects/:id` | Admin + owner | 403 for anyone else |
+| DELETE | `/projects/:id` | Admin + owner | |
 | GET | `/skills` | — | `?category=` and `?minLevel=` filter; sorted by category then `order` |
 | GET | `/skills/:id` | — | 404 on a malformed id |
-| POST | `/skills` | Bearer | `name` required, `level` 1–5, `category` from the fixed list |
-| PUT/PATCH | `/skills/:id` | Bearer + owner | 403 for anyone else |
-| DELETE | `/skills/:id` | Bearer + owner | |
+| POST | `/skills` | Admin | `name` required, `level` 1–5, `category` from the fixed list |
+| PUT/PATCH | `/skills/:id` | Admin + owner | 403 for anyone else |
+| DELETE | `/skills/:id` | Admin + owner | |
 | GET | `/blog` | — | author populated |
 | GET | `/blog/:id` | — | includes `commentCount` |
-| POST | `/blog` | Bearer | |
-| PUT/PATCH | `/blog/:id` | Bearer + author | |
-| DELETE | `/blog/:id` | Bearer + author | deletes the post's comments with it |
+| POST | `/blog` | Admin | |
+| PUT/PATCH | `/blog/:id` | Admin + author | |
+| DELETE | `/blog/:id` | Admin + author | deletes the post's comments with it |
 | GET | `/blog/:postId/comments` | — | `populate("author", "username")` |
 | POST | `/blog/:postId/comments` | Bearer | author from the token, so no display name is trusted |
 | DELETE | `/blog/:postId/comments/:commentId` | Bearer | comment author **or** post author |
 | POST | `/contact` | — | 400 on an invalid email |
-| GET | `/contact` | Bearer | admin inbox, newest first |
-| PATCH | `/contact/:id/read` | Bearer | |
-| GET | `/admin/stats` | Bearer | four counters, computed with `countDocuments` |
-| GET | `/admin/activity` | Bearer | merged feed of the 10 newest events |
+| GET | `/contact` | Admin | admin inbox, newest first |
+| PATCH | `/contact/:id/read` | Admin | |
+| GET | `/admin/stats` | Admin | five counters, computed with `countDocuments` |
+| GET | `/admin/activity` | Admin | merged feed of the 10 newest events |
 
 ---
 
@@ -130,9 +131,16 @@ All under `/api`. `GET /api` returns this map at runtime.
   the column is `select: false` and `toJSON` deletes it.
 - **JWT** signed with `JWT_SECRET`, 7-day expiry, minimal payload (`{ id }`). `protect`
   loads the user on every request, so a deleted account cannot keep using a live token.
+- **Role, then ownership.** A valid token is not permission to write. `User.role` is
+  `member` for anyone who registers and `admin` only for the addresses in `ADMIN_EMAILS`;
+  `requireAdmin` (after `protect`) guards every write, the contact inbox and the dashboard
+  counters. Without it a stranger could register, read other people's messages and publish
+  to the portfolio — a token alone used to be enough. `npm run set:admin -- --list` shows
+  who can write today.
 - **Ownership** is a middleware (`owns`), not a checkbox in the UI: it loads the document,
   compares `user`/`author` to `req.user._id`, and hands the document to the controller so
-  the query is not repeated.
+  the query is not repeated. It runs *after* the role gate, so even an admin cannot edit a
+  record someone else created.
 - **helmet** on every response; **CORS** allow-lists localhost and `*.vercel.app`, and any
   origin in `CLIENT_ORIGIN`. Requests with no origin (curl, Postman) pass.
 - **`Cache-Control: no-store`** on `/api`. Without it a browser can serve a cached comment

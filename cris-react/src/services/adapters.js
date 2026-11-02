@@ -106,6 +106,10 @@ export function adaptUser(raw, token) {
     id: str(user._id || user.id),
     name: str(user.username || user.name || (user.email ? String(user.email).split("@")[0] : ""), "You"),
     email: str(user.email),
+    /* registration gives everyone `member`; only the author account is
+       `admin`. Defaulting to member means a session stored before this
+       field existed is treated as read-only instead of trusted. */
+    role: str(user.role, "member") === "admin" ? "admin" : "member",
     token: str(token || raw.token || raw.accessToken || user.token),
   };
 }

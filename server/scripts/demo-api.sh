@@ -139,7 +139,7 @@ req PUT "/projects/$NEWID" '{"title":"Viva demo project (edited)"}' "$TOKEN"
 expect 200; show 160
 
 # ---------------------------------------------------------------- 8
-step "8/9  Ownership is enforced" "A second user tries to delete the project — expect 403, not 200"
+step "8/9  A registered reader cannot write" "A second account registers as a member, then tries to delete the project — 403 at the role gate"
 req POST /users/register "{\"username\":\"demorunner\",\"email\":\"$SECOND_EMAIL\",\"password\":\"$SECOND_PASS\"}"
 if [ "$CODE" = "409" ]; then
   req POST /users/login "{\"email\":\"$SECOND_EMAIL\",\"password\":\"$SECOND_PASS\"}"
@@ -156,7 +156,7 @@ OTHER=$(printf '%s' "$BODY" | jget token)
 req DELETE "/projects/$NEWID" "" "$OTHER"
 expect 403; show 160
 
-step "8b  The owner can delete it" "DELETE /projects/$NEWID as the author — 200, and the demo data is gone again"
+step "8b  The owner can delete it" "DELETE /projects/$NEWID as the author — 200, and the demo data is gone again (ownership is a second gate; npm run test:api proves an admin who is not the owner still gets 403)"
 req DELETE "/projects/$NEWID" "" "$TOKEN"
 expect 200; show 160
 

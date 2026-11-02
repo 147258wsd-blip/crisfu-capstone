@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const { signToken } = require("../middleware/auth");
+const { roleForEmail } = require("../utils/roles");
 
 /* POST /api/users/register */
 async function register(req, res) {
@@ -22,7 +23,11 @@ async function register(req, res) {
     throw ApiError.conflict(`That ${which} is already registered. Try signing in instead.`);
   }
 
-  const user = await User.create({ username: handle, email, password });
+  /* Anyone may register, because the spec asks for it. Nobody becomes an
+     author by registering: role is decided here, from ADMIN_EMAILS, not
+     from the request body — otherwise "role":"admin" in the payload would
+     be a privilege escalation. */
+  const user = await User.create({ username: handle, email, password, role: roleForEmail(email) });
   const token = signToken(user._id);
 
   res.status(201).json({ success: true, token, user: user.toSafeJSON() });

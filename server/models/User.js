@@ -29,6 +29,16 @@ const userSchema = new mongoose.Schema(
       minlength: [6, "Password must be at least 6 characters"],
       select: false,
     },
+    /* Registration is public, writing is not. `member` can sign in and read
+       its own profile; only `admin` can create, edit or delete content. */
+    role: {
+      type: String,
+      enum: {
+        values: ["admin", "member"],
+        message: "Role must be admin or member",
+      },
+      default: "member",
+    },
   },
   {
     timestamps: true,
@@ -59,7 +69,13 @@ userSchema.methods.comparePassword = function comparePassword(candidate) {
 };
 
 userSchema.methods.toSafeJSON = function toSafeJSON() {
-  return { id: this._id.toString(), _id: this._id.toString(), username: this.username, email: this.email };
+  return {
+    id: this._id.toString(),
+    _id: this._id.toString(),
+    username: this.username,
+    email: this.email,
+    role: this.role || "member",
+  };
 };
 
 module.exports = mongoose.model("User", userSchema);

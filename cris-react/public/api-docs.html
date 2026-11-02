@@ -95,6 +95,12 @@
     ownership checks on every write. This page talks to the deployed API from your browser — the
     exact same cross-origin requests the React client makes.
   </p>
+  <p class="lede" style="margin-top:-6px">
+    <b>Auth column:</b> <b>Bearer</b> means any signed-in account · <b>Admin</b> means
+    <code class="inline">role: "admin"</code> only. Registration is open, but a new account is a
+    <code class="inline">member</code>: it can comment and read, and gets <b>403</b> on every write
+    and on the contact inbox. The author account is the one listed in the README.
+  </p>
 
   <div class="card">
     <h2>Base URL</h2>
@@ -143,32 +149,32 @@
         <tbody>
           <tr><td><span class="m get">GET</span></td><td class="path">/health</td><td class="auth">—</td><td class="desc">Uptime probe. <code class="inline">{success,status,uptime,at}</code></td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/</td><td class="auth">—</td><td class="desc">Machine-readable map of every route.</td></tr>
-          <tr><td><span class="m post">POST</span></td><td class="path">/users/register</td><td class="auth">—</td><td class="desc"><code class="inline">{username,email,password}</code> → 201 + JWT. 409 on duplicate, 400 on weak password.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/users/register</td><td class="auth">—</td><td class="desc"><code class="inline">{username,email,password}</code> → 201 + JWT, account created as <b>member</b>. 409 on duplicate, 400 on weak password.</td></tr>
           <tr><td><span class="m post">POST</span></td><td class="path">/users/login</td><td class="auth">—</td><td class="desc"><code class="inline">{email,password}</code> → 200 + token. One message for both failure cases.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/users/me</td><td class="auth"><b>Bearer</b></td><td class="desc">Token re-validation; the SPA calls it on every page load.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/projects</td><td class="auth">—</td><td class="desc">All projects. <code class="inline">?cat=web</code> filters by category.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/projects/:id</td><td class="auth">—</td><td class="desc">One project. Malformed id → 404, not a cast error.</td></tr>
-          <tr><td><span class="m post">POST</span></td><td class="path">/projects</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,description,imageUrl,repoUrl,liveUrl}</code>. Owner comes from the token.</td></tr>
-          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Partial update. 403 for anyone who is not the owner.</td></tr>
-          <tr><td><span class="m del">DELETE</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/projects</td><td class="auth"><b>Admin</b></td><td class="desc"><code class="inline">{title,description,imageUrl,repoUrl,liveUrl}</code>. Owner comes from the token.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/projects/:id</td><td class="auth"><b>Admin</b> + owner</td><td class="desc">Partial update. 403 for anyone who is not the owner.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/projects/:id</td><td class="auth"><b>Admin</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/skills</td><td class="auth">—</td><td class="desc">The toolbox the home page renders. <code class="inline">?category=Backend</code> and <code class="inline">?minLevel=5</code> filter it.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/skills/:id</td><td class="auth">—</td><td class="desc">One skill. Malformed id → 404.</td></tr>
-          <tr><td><span class="m post">POST</span></td><td class="path">/skills</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{name,category,level,order}</code>. Level 1–5; category from a fixed list.</td></tr>
-          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/skills/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Partial update. 403 for anyone else.</td></tr>
-          <tr><td><span class="m del">DELETE</span></td><td class="path">/skills/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/skills</td><td class="auth"><b>Admin</b></td><td class="desc"><code class="inline">{name,category,level,order}</code>. Level 1–5; category from a fixed list.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/skills/:id</td><td class="auth"><b>Admin</b> + owner</td><td class="desc">Partial update. 403 for anyone else.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/skills/:id</td><td class="auth"><b>Admin</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/blog</td><td class="auth">—</td><td class="desc">Posts, author populated. <code class="inline">?tag=</code> <code class="inline">?q=</code></td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/blog/:id</td><td class="auth">—</td><td class="desc">One post plus <code class="inline">commentCount</code>.</td></tr>
-          <tr><td><span class="m post">POST</span></td><td class="path">/blog</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,excerpt,body,tags,readTime}</code></td></tr>
-          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/blog/:id</td><td class="auth"><b>Bearer</b> + author</td><td class="desc">Update. 403 for a different user.</td></tr>
-          <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:id</td><td class="auth"><b>Bearer</b> + author</td><td class="desc">Deletes the post and its comments together.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/blog</td><td class="auth"><b>Admin</b></td><td class="desc"><code class="inline">{title,excerpt,body,tags,readTime}</code></td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/blog/:id</td><td class="auth"><b>Admin</b> + author</td><td class="desc">Update. 403 for a different user.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:id</td><td class="auth"><b>Admin</b> + author</td><td class="desc">Deletes the post and its comments together.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/blog/:postId/comments</td><td class="auth">—</td><td class="desc">Comments for one post, author populated.</td></tr>
           <tr><td><span class="m post">POST</span></td><td class="path">/blog/:postId/comments</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{body}</code> — author taken from the token, never the body.</td></tr>
           <tr><td><span class="m del">DELETE</span></td><td class="path">/blog/:postId/comments/:commentId</td><td class="auth"><b>Bearer</b></td><td class="desc">Comment author or the post author may delete.</td></tr>
           <tr><td><span class="m post">POST</span></td><td class="path">/contact</td><td class="auth">—</td><td class="desc"><code class="inline">{name,email,message}</code> → 201. 400 on an invalid email or a message under 10 characters.</td></tr>
-          <tr><td><span class="m get">GET</span></td><td class="path">/contact</td><td class="auth"><b>Bearer</b></td><td class="desc">Admin inbox, newest first.</td></tr>
-          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/contact/:id/read</td><td class="auth"><b>Bearer</b></td><td class="desc">Mark one message read.</td></tr>
-          <tr><td><span class="m get">GET</span></td><td class="path">/admin/stats</td><td class="auth"><b>Bearer</b></td><td class="desc">Four counters for the dashboard.</td></tr>
-          <tr><td><span class="m get">GET</span></td><td class="path">/admin/activity</td><td class="auth"><b>Bearer</b></td><td class="desc">Merged feed of the ten newest events.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/contact</td><td class="auth"><b>Admin</b></td><td class="desc">Admin inbox, newest first.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/contact/:id/read</td><td class="auth"><b>Admin</b></td><td class="desc">Mark one message read.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/admin/stats</td><td class="auth"><b>Admin</b></td><td class="desc">Five counters for the dashboard.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/admin/activity</td><td class="auth"><b>Admin</b></td><td class="desc">Merged feed of the ten newest events.</td></tr>
         </tbody>
       </table>
     </div>

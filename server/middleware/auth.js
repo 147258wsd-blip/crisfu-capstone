@@ -58,4 +58,18 @@ function owns(Model, { field = "user", param = "id", label = "resource" } = {}) 
   };
 }
 
-module.exports = { signToken, protect, owns };
+/* Second gate, mounted after protect on every write endpoint.
+   `protect` only answers "is this a real, unexpired session?" — it says
+   nothing about who the caller is. Without this check any visitor could
+   register an account and publish to the portfolio, or read the inbox.
+   403 rather than 401 on purpose: the session is valid, the permission
+   is not, and the client should not clear the token and bounce to login. */
+function requireAdmin(req, res, next) {
+  if (!req.user) return next(ApiError.unauthorized("Not authorised — no session."));
+  if (req.user.role !== "admin") {
+    return next(ApiError.forbidden("This account can read the site but not change it."));
+  }
+  return next();
+}
+
+module.exports = { signToken, protect, requireAdmin, owns };

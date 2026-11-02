@@ -173,6 +173,7 @@ export function readSession() {
     return {
       name: String(raw.name || raw.email.split("@")[0]),
       email: String(raw.email),
+      role: raw.role === "admin" ? "admin" : "member",
       token: String(raw.token || ""),
     };
   } catch (e) {
@@ -219,6 +220,7 @@ export const api = {
         return persistSession({
           name: email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()),
           email,
+          role: "admin",
           token: makeToken(),
         });
       });
@@ -230,7 +232,7 @@ export const api = {
         const { data } = await http.post("/users/register", { username: name, email, password });
         return persistSession(adaptUser(data));
       }
-      return mock(() => persistSession({ name, email, token: makeToken() }));
+      return mock(() => persistSession({ name, email, role: "admin", token: makeToken() }));
     },
 
     async me() {

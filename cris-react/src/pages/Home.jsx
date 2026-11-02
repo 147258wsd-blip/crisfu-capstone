@@ -143,8 +143,8 @@ export default function Home() {
               <p className="capnote">
                 The API runs on Alibaba Cloud Function Compute, the client is a static build on GitHub
                 Pages. Both are separate deployments talking over CORS — no mock data, no localhost.
-                The signed-in side is at <Link to="/admin">/admin</Link> (the demo account is printed in
-                the README).
+                The author&rsquo;s dashboard is at <Link to="/admin">/admin</Link> (the account is printed
+                in the README); a visitor who registers can comment, and every write answers 403.
               </p>
             </div>
             <div className="mini capmini">

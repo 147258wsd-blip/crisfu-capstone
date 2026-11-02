@@ -107,6 +107,9 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isAuthed: !!user,
+      /* the author account is the only one that may write; everyone else
+         registers as a reader. The API checks the same flag server-side. */
+      isAdmin: !!user && user.role === "admin",
       checking,
       pending,
       error,

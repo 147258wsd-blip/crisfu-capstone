@@ -10,6 +10,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node seed.js",
+    "set:admin": "node scripts/set-admin.js",
     "test:api": "node scripts/test-api.js",
     "test:serverless": "node scripts/test-serverless.js",
     "test:fc": "node scripts/test-fc.js",
