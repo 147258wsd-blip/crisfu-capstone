@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 266" width="720" height="266">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0E0A18"/>
+      <stop offset=".55" stop-color="#0B0E1C"/>
+      <stop offset="1" stop-color="#08202A"/>
+    </linearGradient>
+    <linearGradient id="win" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12161F"/>
+      <stop offset="1" stop-color="#080A11"/>
+    </linearGradient>
+    <linearGradient id="dot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse">
+      <path d="M26 0H0V26" fill="none" stroke="#ffffff" stroke-opacity=".04" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="halo" cx=".5" cy=".45" r=".62">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity=".10"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="720" height="266" fill="url(#bg)"/>
+  <rect width="720" height="266" fill="url(#grid)"/>
+  <rect width="720" height="266" fill="url(#halo)"/>
+
+  <!-- terminal window -->
+  <rect x="96" y="38" width="528" height="190" rx="12" fill="url(#win)" stroke="#ffffff" stroke-opacity=".12"/>
+  <rect x="96" y="38" width="528" height="34" rx="12" fill="#ffffff" fill-opacity=".045"/>
+  <rect x="96" y="60" width="528" height="12" fill="#ffffff" fill-opacity=".045"/>
+  <line x1="96" y1="72" x2="624" y2="72" stroke="#ffffff" stroke-opacity=".08"/>
+
+  <!-- traffic lights -->
+  <circle cx="118" cy="55" r="4.2" fill="#F87171" fill-opacity=".55"/>
+  <circle cx="136" cy="55" r="4.2" fill="#FBBF24" fill-opacity=".5"/>
+  <circle cx="154" cy="55" r="4.2" fill="#34D399" fill-opacity=".5"/>
+
+  <!-- title pill -->
+  <rect x="546" y="49" width="58" height="12" rx="6" fill="#ffffff" fill-opacity=".07"/>
+
+  <!-- prompt line 1 -->
+  <polyline points="120,88 129,96 120,104" fill="none" stroke="#22D3EE" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="140" y="92" width="150" height="8" rx="4" fill="#ffffff" fill-opacity=".30"/>
+  <rect x="300" y="92" width="46" height="8" rx="4" fill="#22D3EE" fill-opacity=".35"/>
+
+  <!-- prompt line 2 -->
+  <polyline points="120,118 129,126 120,134" fill="none" stroke="#22D3EE" stroke-opacity=".55" stroke-width="2.4"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="140" y="122" width="104" height="8" rx="4" fill="#ffffff" fill-opacity=".18"/>
+
+  <!-- output lines -->
+  <rect x="140" y="150" width="176" height="7" rx="3.5" fill="#ffffff" fill-opacity=".10"/>
+  <rect x="140" y="164" width="120" height="7" rx="3.5" fill="#ffffff" fill-opacity=".07"/>
+
+  <!-- streak dots: 11 kept, 3 still empty -->
+  <g>
+    <circle cx="352" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="390" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="428" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="466" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="504" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="542" cy="100" r="7" fill="url(#dot)"/>
+    <circle cx="580" cy="100" r="7" fill="url(#dot)"/>
+
+    <circle cx="352" cy="146" r="7" fill="url(#dot)"/>
+    <circle cx="390" cy="146" r="7" fill="url(#dot)"/>
+    <circle cx="428" cy="146" r="7" fill="url(#dot)"/>
+    <circle cx="466" cy="146" r="7" fill="url(#dot)"/>
+
+    <circle cx="504" cy="146" r="6.4" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="1.6"/>
+    <circle cx="542" cy="146" r="6.4" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="1.6"/>
+    <circle cx="580" cy="146" r="6.4" fill="none" stroke="#ffffff" stroke-opacity=".22" stroke-width="1.6"/>
+  </g>
+
+  <!-- progress rail -->
+  <rect x="120" y="196" width="480" height="8" rx="4" fill="#ffffff" fill-opacity=".07"/>
+  <rect x="120" y="196" width="326" height="8" rx="4" fill="url(#bar)"/>
+  <circle cx="446" cy="200" r="6" fill="#0A0D14" stroke="#22D3EE" stroke-width="2"/>
+</svg>
