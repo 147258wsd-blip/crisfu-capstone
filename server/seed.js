@@ -41,9 +41,11 @@ function packProject(p) {
       cover: p.cover || 1,
       coverLabel: p.coverLabel || "Project",
       status: p.status || "live",
+      statusNote: p.statusNote || "",
+      links: p.links || [],
     }),
     imageUrl: p.imageUrl || "",
-    repoUrl: p.source || "",
+    repoUrl: p.source && p.source !== "#" ? p.source : "",
     liveUrl: p.demo && p.demo !== "#" ? p.demo : "",
   };
 }

@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import ErrorState from "../components/ErrorState";
+import { statusLabel } from "../components/ProjectCard";
 import { DetailSkeleton } from "../components/Skeleton";
 import { useApi, useTitle } from "../hooks/useApi";
 import { api } from "../services/api";
@@ -46,10 +47,12 @@ export default function ProjectDetail() {
     );
   }
 
-  const demoOk = project.demo && project.demo !== "#";
-  /* the seed data still points at the old multi-page filenames */
-  const internalDemo = { "debate.html": "/debate", "index.html": "/", "projects.html": "/projects" }[project.demo];
-  const demoHref = internalDemo || project.demo;
+  /* Only render a button when the target exists. The old version mapped the
+     seed's "debate.html" onto a route and still rendered "Source code" with
+     href="#", i.e. a button that looked real and did nothing. */
+  const demoHref = project.demo;
+  const sourceHref = project.source;
+  const extraLinks = project.links || [];
 
   return (
     <>
@@ -71,33 +74,40 @@ export default function ProjectDetail() {
           <p className="lead">{project.blurb}</p>
 
           <div className="hero-actions">
-            {demoOk ? (
-              internalDemo ? (
-                <Link className="btn btn-primary" to={demoHref}>
-                  Open the demo
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17 17 7M9 7h8v8" />
-                  </svg>
-                </Link>
-              ) : (
-                <a className="btn btn-primary" href={demoHref}>
-                  Open the demo
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M7 17 17 7M9 7h8v8" />
-                  </svg>
-                </a>
-              )
+            {demoHref ? (
+              <a className="btn btn-primary" href={demoHref} target="_blank" rel="noreferrer">
+                {project.status === "concept" ? "View the proposal" : "Open the live app"}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17 17 7M9 7h8v8" />
+                </svg>
+              </a>
             ) : (
               <span className="btn btn-ghost" style={{ opacity: 0.55, cursor: "default" }}>
-                Not deployed
+                Not deployed — concept only
               </span>
             )}
-            <a className="btn btn-ghost" href={project.source}>
-              Source code
-            </a>
+            {sourceHref && (
+              <a className="btn btn-ghost" href={sourceHref} target="_blank" rel="noreferrer">
+                Source code
+              </a>
+            )}
+            {extraLinks.map((l) => (
+              <a className="btn btn-ghost" key={l.href} href={l.href} target="_blank" rel="noreferrer">
+                {l.label}
+              </a>
+            ))}
           </div>
 
           <div className="meta-grid">
+            <div>
+              <div className="k">Current status</div>
+              <div className="v">
+                <span className={`status-pill st-${String(project.status || "concept").toLowerCase()}`}>
+                  {statusLabel(project.status)}
+                </span>
+                {project.statusNote ? <span className="status-note">{project.statusNote}</span> : null}
+              </div>
+            </div>
             <div>
               <div className="k">Role</div>
               <div className="v">{project.role}</div>
@@ -115,7 +125,11 @@ export default function ProjectDetail() {
 
         <div className={`banner cv-${project.cover}${project.imageUrl ? " has-shot" : ""}`}>
           {project.imageUrl && (
-            <img className="banner-shot" src={project.imageUrl} alt={`${project.title} screenshot`} />
+            <img
+              className="banner-shot"
+              src={project.imageUrl}
+              alt={`${project.title} ${/\.svg$/i.test(project.imageUrl) ? "interface sketch" : "screenshot of the running app"}`}
+            />
           )}
           <span className="cv-label">
             {project.coverLabel} · {project.year}
@@ -125,13 +139,19 @@ export default function ProjectDetail() {
         <div className="prose">
           <h2>The problem</h2>
           <p>{project.problem}</p>
-          <h2>What I built</h2>
+          <h2>{project.status === "concept" ? "What it would do" : "What I built"}</h2>
+          {project.status === "concept" && (
+            <p className="concept-note">
+              None of the following is built. This is the scope I would implement, written down while
+              the idea was still concrete — not a list of finished features.
+            </p>
+          )}
           <ul>
             {project.built.map((b) => (
               <li key={b}>{b}</li>
             ))}
           </ul>
-          <h2>What I'd change</h2>
+          <h2>{project.status === "concept" ? "What is still open" : "What I'd change"}</h2>
           <p>{project.learned}</p>
           <p>
             {project.tags.map((t) => (

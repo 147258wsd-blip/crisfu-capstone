@@ -25,7 +25,10 @@ function ItemForm({ kind, item, onCancel, onSave }) {
        whatever the record already has, so an edit cannot flatten a
        structured post body into one paragraph */
     detail: "",
-    status: item ? item.status || "draft" : "draft",
+    status: item ? item.status || (isProject ? "concept" : "draft") : isProject ? "concept" : "draft",
+    statusNote: item ? item.statusNote || "" : "",
+    demo: item ? item.demo || "" : "",
+    source: item ? item.source || "" : "",
   });
   const [invalid, setInvalid] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -67,6 +70,9 @@ function ItemForm({ kind, item, onCancel, onSave }) {
             year: form.when.trim(),
             blurb: form.blurb.trim(),
             status: form.status,
+            statusNote: form.statusNote.trim(),
+            demo: form.demo.trim(),
+            source: form.source.trim(),
             ...(detail ? { problem: detail } : {}),
           }
         : {
@@ -134,12 +140,48 @@ function ItemForm({ kind, item, onCancel, onSave }) {
       </div>
 
       <div className="field">
-        <label htmlFor="mStatus">Status</label>
+        <label htmlFor="mStatus">{isProject ? "How far did it get" : "Status"}</label>
         <select id="mStatus" value={form.status} onChange={set("status")}>
-          <option value="live">Published</option>
-          <option value="draft">Draft</option>
+          {isProject ? (
+            <>
+              <option value="live">Live — deployed and testable</option>
+              <option value="prototype">Prototype — runs, not deployed</option>
+              <option value="partial">In progress — partly built</option>
+              <option value="concept">Concept — design only</option>
+            </>
+          ) : (
+            <>
+              <option value="live">Published</option>
+              <option value="draft">Draft</option>
+            </>
+          )}
         </select>
       </div>
+
+      {isProject && (
+        <>
+          <div className="field">
+            <label htmlFor="mStatusNote">Current status — one sentence</label>
+            <input
+              id="mStatusNote"
+              value={form.statusNote}
+              onChange={set("statusNote")}
+              placeholder="e.g. Deployed; auth, comments and the admin inbox are all wired to Atlas."
+            />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div className="field">
+              <label htmlFor="mDemo">Live URL</label>
+              <input id="mDemo" value={form.demo} onChange={set("demo")} placeholder="Leave blank if not deployed" />
+            </div>
+            <div className="field">
+              <label htmlFor="mSource">Source URL</label>
+              <input id="mSource" value={form.source} onChange={set("source")} placeholder="Leave blank if there is no repo" />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="modal-foot">
         <button className="btn btn-ghost" type="button" onClick={onCancel} disabled={saving}>

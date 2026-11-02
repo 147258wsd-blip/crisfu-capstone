@@ -133,13 +133,27 @@ export function adaptProject(raw) {
     problem: str(d.problem, plain),
     built: Array.isArray(d.built) ? d.built : [],
     learned: str(d.learned),
-    demo: str(raw.liveUrl || d.demo),
-    source: str(raw.repoUrl || d.source),
+    demo: realLink(raw.liveUrl || d.demo),
+    source: realLink(raw.repoUrl || d.source),
     imageUrl: assetUrl(raw.imageUrl || d.imageUrl),
     owner: authorName(raw.user, ""),
     status: str(d.status, raw.status || "live"),
+    /* One honest sentence per project: how far it actually got. Rendered as
+       "Current status" on the detail page and as a badge on the card. */
+    statusNote: str(d.statusNote),
+    /* Extra links that are not the two spec columns (repoUrl / liveUrl),
+       e.g. an API reference. [{label, href}] */
+    links: Array.isArray(d.links) ? d.links.filter((l) => l && l.label && l.href) : [],
     createdAt: raw.createdAt || null,
   };
+}
+
+/* A link only counts if it goes somewhere real. The seed used "#" as a
+   placeholder, which rendered a button that did nothing. */
+export function realLink(href) {
+  const h = str(href).trim();
+  if (!h || h === "#" || h === "javascript:void(0)") return "";
+  return h;
 }
 
 /* page payload -> API payload (only the columns the spec defines) */
@@ -158,13 +172,15 @@ export function encodeProject(p = {}) {
     cover: Number(p.cover) || 1,
     coverLabel: str(p.coverLabel, p.cat || "Project"),
     status: str(p.status, "live"),
+    statusNote: str(p.statusNote),
+    links: Array.isArray(p.links) ? p.links.filter((l) => l && l.label && l.href) : [],
   };
   return {
     title: str(p.title),
     description: JSON.stringify(packed),
     imageUrl: str(p.imageUrl),
-    repoUrl: str(p.source),
-    liveUrl: str(p.demo),
+    repoUrl: realLink(p.source),
+    liveUrl: realLink(p.demo),
   };
 }
 

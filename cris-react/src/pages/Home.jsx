@@ -53,6 +53,9 @@ export default function Home() {
               <b> something you can click</b> — writing the API, tuning the spacing, and arguing about
               the parts that are actually interesting. This is where I keep the results.
             </p>
+            <p className="hero-meta">
+              Fu Zhenyu (Cris) · Inner Mongolia, China · computer science student
+            </p>
             <div className="hero-actions">
               <Link className="btn btn-primary" to="/projects">
                 View my work
@@ -103,6 +106,78 @@ export default function Home() {
         </section>
       </div>
 
+      {/* ============ capstone ============ */}
+      {/* The graded project should be the first thing anyone can verify, so it
+          gets the slot directly under the hero and three real entry points. */}
+      <section className="sec" id="capstone" style={{ paddingTop: 8 }}>
+        <div className="wrap">
+          <Reveal className="feature capstone">
+            <div>
+              <span className="badge">CAPSTONE · FULL-STACK · 2026</span>
+              <h3>This site is the capstone</h3>
+              <p>
+                Everything you are reading is one project: a <b>React 18</b> single-page app talking
+                to an <b>Express</b> REST API and a <b>MongoDB Atlas</b> database. JWT auth, comments
+                on posts, a contact form that lands in a real inbox, and an admin dashboard that
+                writes back to the same collections the public pages read from.
+              </p>
+              <div className="capstack">
+                <span>React 18 · Vite</span>
+                <span>React Router</span>
+                <span>Express</span>
+                <span>Mongoose / Atlas</span>
+                <span>JWT + bcrypt</span>
+                <span>27 endpoints</span>
+              </div>
+              <div className="hero-actions">
+                <a className="btn btn-primary" href={`${import.meta.env.BASE_URL}api-docs.html`} target="_blank" rel="noreferrer">
+                  API reference
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </a>
+                <a className="btn btn-ghost" href="https://github.com/147258wsd-blip/crisfu-capstone" target="_blank" rel="noreferrer">
+                  Source on GitHub
+                </a>
+              </div>
+              <p className="capnote">
+                The API runs on Alibaba Cloud Function Compute, the client is a static build on GitHub
+                Pages. Both are separate deployments talking over CORS — no mock data, no localhost.
+                The signed-in side is at <Link to="/admin">/admin</Link> (the demo account is printed in
+                the README).
+              </p>
+            </div>
+            <div className="mini capmini">
+              <div className="caprow">
+                <span className="capk">GET</span>
+                <span className="capp">/api/projects</span>
+                <span className="capv">6 docs</span>
+              </div>
+              <div className="caprow">
+                <span className="capk">GET</span>
+                <span className="capp">/api/skills</span>
+                <span className="capv">18 docs</span>
+              </div>
+              <div className="caprow">
+                <span className="capk">POST</span>
+                <span className="capp">/api/users/login</span>
+                <span className="capv">JWT 7d</span>
+              </div>
+              <div className="caprow">
+                <span className="capk">POST</span>
+                <span className="capp">/api/contact</span>
+                <span className="capv">→ Inbox</span>
+              </div>
+              <div className="caprow">
+                <span className="capk">DELETE</span>
+                <span className="capp">/api/projects/:id</span>
+                <span className="capv">owner only</span>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ============ projects preview ============ */}
       <section className="sec" id="projects">
         <div className="wrap">
@@ -112,7 +187,10 @@ export default function Home() {
                 <span className="num">01</span>Selected work
               </span>
               <h2>Things I've built</h2>
-              <p className="sec-desc">Three I still open for no reason</p>
+              <p className="sec-desc">
+                The capstone, one playable prototype, and four ideas I have not built yet — each card
+                says which it is
+              </p>
             </div>
             <Link className="more" to="/projects">
               All projects →
@@ -161,9 +239,14 @@ export default function Home() {
                     <path d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
                 </Link>
-                <Link className="btn btn-ghost" to="/projects/debate-simulator">
-                  How it works
-                </Link>
+                <a
+                  className="btn btn-ghost"
+                  href={`${import.meta.env.BASE_URL}debate-simulator/`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open the original prototype
+                </a>
               </div>
             </div>
             <div className="mini">
@@ -259,6 +342,47 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ============ about ============ */}
+      <section className="sec" id="about" style={{ paddingTop: 36 }}>
+        <div className="wrap">
+          <Reveal className="sec-head">
+            <div>
+              <span className="sec-tag">
+                <span className="num">04</span>About
+              </span>
+              <h2>Who is writing this</h2>
+            </div>
+          </Reveal>
+          <Reveal className="about-grid">
+            <div>
+              <p>
+                I am <b>Fu Zhenyu</b>, from Inner Mongolia, China. I study computer science and I spend
+                most of my free time on the same question: why does one tool feel obvious and another
+                one makes you read the manual twice?
+              </p>
+              <p>
+                The pattern I keep coming back to is feedback. The debate simulator exists because
+                arguing with a polite chatbot taught me nothing; the admin inbox on this site exists
+                because a contact form you never read is just a hole in the page. Both are the same
+                complaint — a loop that never closes.
+              </p>
+            </div>
+            <div>
+              <p>
+                What I am working on now: this capstone, and the gap between "it runs on my machine"
+                and "someone else can open it". That gap turned out to be most of the work — gateways
+                that rewrite headers, platforms that reject new accounts, a single missing environment
+                variable turning a login into a 500.
+              </p>
+              <p>
+                I would rather show a small thing that runs than describe a large thing that does not.
+                That is why every project page above says how far it actually got.
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ============ contact ============ */}
       <section className="sec" id="contact" style={{ paddingTop: 36 }}>
         <div className="wrap">
@@ -272,8 +396,8 @@ export default function Home() {
               <Link className="btn btn-primary" to="/contact">
                 Send a message
               </Link>
-              <a className="btn btn-ghost" href="#">
-                Download CV
+              <a className="btn btn-ghost" href="mailto:hello@crisfu.dev">
+                Email me
               </a>
             </div>
             <div className="mail">
