@@ -15,6 +15,7 @@ const { spawn } = require("child_process");
 const CHROME = process.env.CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const BASE = process.env.SMOKE_BASE || "http://localhost:4173";
 const API = process.env.API_BASE || "http://localhost:5000/api";
+const SUB = (() => { try { return new URL(BASE).pathname.replace(/\/$/, ""); } catch (e) { return ""; } })();
 const PORT = 9334;
 
 const EMAIL = process.env.SMOKE_EMAIL || "cris@crisfu.dev";
@@ -47,7 +48,9 @@ const click = (el) => el.dispatchEvent(new MouseEvent("click", { bubbles: true, 
 const text = (el) => (el ? el.textContent.replace(/\\s+/g, " ").trim() : "");
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const $ = (s, r) => (r || document).querySelector(s);
-const go = (p) => { window.history.pushState({}, "", p); window.dispatchEvent(new PopStateEvent("popstate")); };
+const SUB = ${JSON.stringify(SUB)};
+const pth = () => { const p = location.pathname; return SUB && p.indexOf(SUB) === 0 ? (p.slice(SUB.length) || "/") : p; };
+const go = (p) => { window.history.pushState({}, "", SUB + p); window.dispatchEvent(new PopStateEvent("popstate")); };
 const nav = (href) => click($('header .nav-links a[href="' + href + '"]'));
 const tab = (label) => $$(".side a").find((a) => text(a).includes(label));
 const rows = () => $$(".tbl tbody tr");
@@ -66,7 +69,7 @@ async function signIn() {
   setVal($("#email"), ${JSON.stringify(EMAIL)});
   setVal($("#password"), ${JSON.stringify(PASSWORD)});
   click($('button[type="submit"]'));
-  await waitFor(() => location.pathname === "/admin", 15000);
+  await waitFor(() => pth() === "/admin", 15000);
   await waitFor(() => $$(".stats .stat").length === 5, 15000);
 }
 `;
@@ -134,8 +137,8 @@ const SCENARIOS = [
     body: `
       await waitFor(() => $$(".card").length >= 6);
       click($$(".card a, .card")[0]);
-      await waitFor(() => /^\\/projects\\/[a-f0-9]{24}$/.test(location.pathname.split("?")[0]), 10000);
-      note("url " + location.pathname);
+      await waitFor(() => /^\\/projects\\/[a-f0-9]{24}$/.test(pth()), 10000);
+      note("url " + pth());
       await waitFor(() => $(".banner") || $("h1"));
       const body = text($("main"));
       if (body.length < 200) throw new Error("detail page looks empty");
@@ -150,9 +153,9 @@ const SCENARIOS = [
       const first = $$(".posts .post").find((a) => /\\/blog\\/[a-f0-9]{24}/.test(a.getAttribute("href")));
       if (!first) throw new Error("no post link with a real id");
       click(first);
-      await waitFor(() => /^\\/blog\\/[a-f0-9]{24}$/.test(location.pathname.split("?")[0]), 10000);
+      await waitFor(() => /^\\/blog\\/[a-f0-9]{24}$/.test(pth()), 10000);
       await waitFor(() => $(".post-body, .prose, main"));
-      note("post " + location.pathname + " rendered");
+      note("post " + pth() + " rendered");
     `,
   },
   {
@@ -169,7 +172,7 @@ const SCENARIOS = [
       setVal($("#email"), ${JSON.stringify(EMAIL)});
       setVal($("#password"), ${JSON.stringify(PASSWORD)});
       click($('button[type="submit"]'));
-      await waitFor(() => location.pathname === "/admin", 15000);
+      await waitFor(() => pth() === "/admin", 15000);
       await waitFor(() => $$(".stats .stat").length === 5, 15000);
       if (!tok()) throw new Error("no JWT in localStorage");
       note("token stored (" + tok().length + " chars), stats=" + $$(".stats .stat").map((s) => text(s)).join(","));
@@ -282,9 +285,9 @@ const SCENARIOS = [
     body: `
       localStorage.clear();
       go("/admin");
-      await waitFor(() => location.pathname === "/login", 12000);
+      await waitFor(() => pth() === "/login", 12000);
       if (!location.search.includes("next=%2Fadmin")) throw new Error("missing next= param: " + location.search);
-      note("signed-out /admin -> " + location.pathname + location.search);
+      note("signed-out /admin -> " + pth() + location.search);
 
       const expires = new Date(Date.now() + 3600e3).toUTCString();
       document.cookie = "probe=1;expires=" + expires;
