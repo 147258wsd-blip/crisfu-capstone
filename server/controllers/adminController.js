@@ -1,21 +1,23 @@
 const Project = require("../models/Project");
+const Skill = require("../models/Skill");
 const BlogPost = require("../models/BlogPost");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
 const { relativeLabel } = require("./helpers");
 
 /* GET /api/admin/stats — protected.
-   The dashboard renders four numbers; counting them server-side means
+   The dashboard renders five numbers; counting them server-side means
    the browser never has to download every document to add them up. */
 async function stats(req, res) {
-  const [projects, posts, comments, inbox] = await Promise.all([
+  const [projects, skills, posts, comments, inbox] = await Promise.all([
     Project.countDocuments(),
+    Skill.countDocuments(),
     BlogPost.countDocuments(),
     Comment.countDocuments(),
     Message.countDocuments(),
   ]);
 
-  res.json({ success: true, projects, posts, comments, inbox });
+  res.json({ success: true, projects, skills, posts, comments, inbox });
 }
 
 /* GET /api/admin/activity — protected.

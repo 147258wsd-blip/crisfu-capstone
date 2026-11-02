@@ -15,6 +15,8 @@ import { http, ApiError, TOKEN_KEY, SESSION_KEY, readToken } from "./http";
 import {
   adaptProject,
   encodeProject,
+  adaptSkill,
+  encodeSkill,
   adaptPost,
   encodePost,
   adaptComment,
@@ -33,6 +35,7 @@ export const USE_MOCK = String(import.meta.env.VITE_USE_MOCK ?? "true") !== "fal
 const SES_KEY = SESSION_KEY;
 const PKEY = "cf.admin.projects";
 const SKEY = "cf.admin.posts";
+const KKEY = "cf.admin.skills";
 const LKEY = "cf.admin.log";
 const OUTBOX = "cf.outbox";
 const MATCHES = "cf.debate.matches";
@@ -115,6 +118,29 @@ const SEED_LOG = [
   { t: "New post: Why I shipped an entire web app inside one HTML file", at: "4 days ago" },
   { t: "3 comments awaiting reply", at: "1 week ago" },
 ];
+
+/* Mock-mode copy of the toolbox. The real build reads /api/skills — this
+   only exists so `npm run dev` with no server still renders the section. */
+const SEED_SKILLS = [
+  ["React", "Frontend", 5],
+  ["JavaScript", "Frontend", 5],
+  ["TypeScript", "Frontend", 4],
+  ["Tailwind", "Frontend", 4],
+  ["HTML / CSS", "Frontend", 5],
+  ["Vite", "Frontend", 4],
+  ["Node.js", "Backend", 5],
+  ["Express", "Backend", 4],
+  ["MongoDB", "Backend", 4],
+  ["Mongoose", "Backend", 4],
+  ["REST API", "Backend", 5],
+  ["JWT", "Backend", 4],
+  ["Git", "Tools", 4],
+  ["Postman", "Tools", 4],
+  ["Vercel", "Tools", 4],
+  ["Render", "Tools", 3],
+  ["Figma", "Tools", 3],
+  ["Linux", "Tools", 4],
+].map(([name, category, level], i) => ({ id: "k-" + (i + 1), name, category, level, order: i + 1 }));
 
 const SEED_COMMENTS = [
   {
@@ -243,6 +269,24 @@ export const api = {
     },
   },
 
+  /* ---------------- skills ----------------
+     The toolbox is a collection on the server, not a constant in Home.jsx,
+     so adding a skill is a write through this same module. */
+  skills: {
+    async list({ category } = {}) {
+      if (!USE_MOCK) {
+        const { data } = await http.get("/skills", {
+          params: category && category !== "All" ? { category } : {},
+        });
+        return unwrap(data, "skills").map(adaptSkill);
+      }
+      return mock(() => {
+        const all = clone(SEED_SKILLS);
+        return category && category !== "All" ? all.filter((s) => s.category === category) : all;
+      });
+    },
+  },
+
   /* ---------------- posts ---------------- */
   posts: {
     async list({ cat } = {}) {
@@ -362,6 +406,14 @@ export const api = {
       return mock(() => clone(listOf(SKEY, seedAdminPosts)), 320);
     },
 
+    async skills() {
+      if (!USE_MOCK) {
+        const { data } = await http.get("/skills");
+        return unwrap(data, "skills").map(adaptSkill);
+      }
+      return mock(() => clone(listOf(KKEY, () => SEED_SKILLS)), 320);
+    },
+
     async log() {
       if (!USE_MOCK) {
         const { data } = await http.get("/admin/activity");
@@ -410,6 +462,47 @@ export const api = {
         if (victim) pushLog(`Deleted project “${victim.title}”`);
         return { ok: true };
       }, 380);
+    },
+
+    async createSkill(payload) {
+      if (!USE_MOCK) {
+        const { data } = await http.post("/skills", encodeSkill(payload));
+        return adaptSkill(data.skill || data);
+      }
+      return mock(() => {
+        const list = listOf(KKEY, () => SEED_SKILLS);
+        const item = { ...payload, id: "k-" + Date.now() };
+        writeJSON(KKEY, [...list, item]);
+        pushLog(`Added skill “${item.name}”`);
+        return item;
+      }, 380);
+    },
+
+    async updateSkill(id, payload) {
+      if (!USE_MOCK) {
+        const { data } = await http.put(`/skills/${id}`, encodeSkill(payload));
+        return adaptSkill(data.skill || data);
+      }
+      return mock(() => {
+        const list = listOf(KKEY, () => SEED_SKILLS).map((s) => (s.id === id ? { ...s, ...payload } : s));
+        writeJSON(KKEY, list);
+        pushLog(`Updated skill “${payload.name}”`);
+        return list.find((s) => s.id === id);
+      }, 380);
+    },
+
+    async deleteSkill(id) {
+      if (!USE_MOCK) {
+        const { data } = await http.delete(`/skills/${id}`);
+        return data;
+      }
+      return mock(() => {
+        const list = listOf(KKEY, () => SEED_SKILLS);
+        const victim = list.find((s) => s.id === id);
+        writeJSON(KKEY, list.filter((s) => s.id !== id));
+        if (victim) pushLog(`Removed skill “${victim.name}”`);
+        return { ok: true };
+      }, 340);
     },
 
     async createPost(payload) {
@@ -476,6 +569,7 @@ export const api = {
         const box = readJSON(OUTBOX, []);
         return {
           projects: projects.length,
+          skills: listOf(KKEY, () => SEED_SKILLS).length,
           posts: posts.length,
           comments,
           inbox: Array.isArray(box) ? box.length : 0,

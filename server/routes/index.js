@@ -2,6 +2,7 @@ const express = require("express");
 
 const userRoutes = require("./userRoutes");
 const projectRoutes = require("./projectRoutes");
+const skillRoutes = require("./skillRoutes");
 const blogRoutes = require("./blogRoutes");
 const contactRoutes = require("./contactRoutes");
 const adminRoutes = require("./adminRoutes");
@@ -23,6 +24,13 @@ router.get("/", (req, res) => {
         "PUT /api/projects/:id",
         "DELETE /api/projects/:id",
       ],
+      skills: [
+        "GET /api/skills",
+        "GET /api/skills/:id",
+        "POST /api/skills",
+        "PUT /api/skills/:id",
+        "DELETE /api/skills/:id",
+      ],
       blog: [
         "GET /api/blog",
         "GET /api/blog/:id",
@@ -35,7 +43,7 @@ router.get("/", (req, res) => {
         "POST /api/blog/:postId/comments",
         "DELETE /api/blog/:postId/comments/:commentId",
       ],
-      contact: ["POST /api/contact", "GET /api/contact", "PATCH /api/contact/:id/read"],
+      contact: ["POST /api/contact", "GET /api/contact", "PUT /api/contact/:id/read"],
       admin: ["GET /api/admin/stats", "GET /api/admin/activity"],
     },
   });
@@ -47,6 +55,7 @@ router.get("/health", (req, res) => {
 
 router.use("/users", userRoutes);
 router.use("/projects", projectRoutes);
+router.use("/skills", skillRoutes);
 router.use("/blog", blogRoutes);
 router.use("/contact", contactRoutes);
 router.use("/admin", adminRoutes);

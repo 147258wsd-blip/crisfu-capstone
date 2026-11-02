@@ -91,7 +91,7 @@
 <main class="wrap">
   <h1>Portfolio &amp; Blog <em>REST API</em></h1>
   <p class="lede">
-    The Express + MongoDB back-end behind the portfolio site. 22 endpoints, JWT authentication,
+    The Express + MongoDB back-end behind the portfolio site. 27 endpoints, JWT authentication,
     ownership checks on every write. This page talks to the deployed API from your browser — the
     exact same cross-origin requests the React client makes.
   </p>
@@ -111,6 +111,7 @@
       <button data-get="/health">GET /health</button>
       <button data-get="">GET /api</button>
       <button data-get="/projects">GET /projects</button>
+      <button data-get="/skills">GET /skills</button>
       <button data-get="/blog">GET /blog</button>
       <button data-get="/contact" data-expect="401">GET /contact (expect 401)</button>
       <button class="ghost" data-get="/admin/stats" data-expect="401">GET /admin/stats (expect 401)</button>
@@ -147,9 +148,14 @@
           <tr><td><span class="m get">GET</span></td><td class="path">/users/me</td><td class="auth"><b>Bearer</b></td><td class="desc">Token re-validation; the SPA calls it on every page load.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/projects</td><td class="auth">—</td><td class="desc">All projects. <code class="inline">?cat=web</code> filters by category.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/projects/:id</td><td class="auth">—</td><td class="desc">One project. Malformed id → 404, not a cast error.</td></tr>
-          <tr><td><span class="m post">POST</span></td><td class="path">/projects</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,description,category,tags,link,year}</code>. Owner comes from the token.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/projects</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,description,imageUrl,repoUrl,liveUrl}</code>. Owner comes from the token.</td></tr>
           <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Partial update. 403 for anyone who is not the owner.</td></tr>
           <tr><td><span class="m del">DELETE</span></td><td class="path">/projects/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/skills</td><td class="auth">—</td><td class="desc">The toolbox the home page renders. <code class="inline">?category=Backend</code> and <code class="inline">?minLevel=5</code> filter it.</td></tr>
+          <tr><td><span class="m get">GET</span></td><td class="path">/skills/:id</td><td class="auth">—</td><td class="desc">One skill. Malformed id → 404.</td></tr>
+          <tr><td><span class="m post">POST</span></td><td class="path">/skills</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{name,category,level,order}</code>. Level 1–5; category from a fixed list.</td></tr>
+          <tr><td><span class="m put">PUT</span> <span class="m patch">PATCH</span></td><td class="path">/skills/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Partial update. 403 for anyone else.</td></tr>
+          <tr><td><span class="m del">DELETE</span></td><td class="path">/skills/:id</td><td class="auth"><b>Bearer</b> + owner</td><td class="desc">Delete. 403 for non-owner, 200 for the owner.</td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/blog</td><td class="auth">—</td><td class="desc">Posts, author populated. <code class="inline">?tag=</code> <code class="inline">?q=</code></td></tr>
           <tr><td><span class="m get">GET</span></td><td class="path">/blog/:id</td><td class="auth">—</td><td class="desc">One post plus <code class="inline">commentCount</code>.</td></tr>
           <tr><td><span class="m post">POST</span></td><td class="path">/blog</td><td class="auth"><b>Bearer</b></td><td class="desc"><code class="inline">{title,excerpt,body,tags,readTime}</code></td></tr>

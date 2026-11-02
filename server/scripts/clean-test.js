@@ -10,6 +10,7 @@ const Project = require("../models/Project");
 const BlogPost = require("../models/BlogPost");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
+const Skill = require("../models/Skill");
 const User = require("../models/User");
 
 const TEST_PATTERNS = [/^Smoke Project/i, /^Test project/i, /^Test post/i, /^Hijack attempt/i];
@@ -36,14 +37,18 @@ async function clean() {
   /* accounts created by the API test (test<timestamp>@test.dev) */
   const uDel = await User.deleteMany({ email: /^test\d+@test\.dev$/ });
 
+  /* skills the smoke test added — the seeded 18 stay */
+  const kDel = await Skill.deleteMany({ name: /^Smoke Skill$/i });
+
   console.log(
     `[clean] projects ${pDel.deletedCount}, posts ${sDel.deletedCount}, comments ${cDel.deletedCount}, ` +
-      `messages ${mDel.deletedCount}, users ${uDel.deletedCount}`
+      `messages ${mDel.deletedCount}, skills ${kDel.deletedCount}, users ${uDel.deletedCount}`
   );
 
   const counts = {
     users: await User.countDocuments(),
     projects: await Project.countDocuments(),
+    skills: await Skill.countDocuments(),
     posts: await BlogPost.countDocuments(),
     comments: await Comment.countDocuments(),
     messages: await Message.countDocuments(),

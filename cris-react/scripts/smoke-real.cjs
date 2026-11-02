@@ -67,7 +67,7 @@ async function signIn() {
   setVal($("#password"), ${JSON.stringify(PASSWORD)});
   click($('button[type="submit"]'));
   await waitFor(() => location.pathname === "/admin", 15000);
-  await waitFor(() => $$(".stats .stat").length === 4, 15000);
+  await waitFor(() => $$(".stats .stat").length === 5, 15000);
 }
 `;
 
@@ -83,6 +83,49 @@ const SCENARIOS = [
       const direct = await api("/projects");
       if (direct.status !== 200 || direct.body.count < 6) throw new Error("API count mismatch");
       note("API reports " + direct.body.count + " projects");
+    `,
+  },
+  {
+    name: "skills-come-from-atlas",
+    url: "/",
+    body: `
+      await waitFor(() => $$(".skill-box").length >= 3, 15000);
+      const chips = $$(".skill");
+      if (chips.length < 18) throw new Error("only " + chips.length + " skills rendered");
+      note($$(".skill-box").length + " groups, " + chips.length + " chips: " + $$(".skill-box h4").map(text).join(" / "));
+      const direct = await api("/skills");
+      if (direct.status !== 200 || direct.body.count < 18) throw new Error("API count mismatch: " + direct.status);
+      note("API reports " + direct.body.count + " skills");
+    `,
+  },
+  {
+    name: "admin-skills-crud",
+    body: `
+      await signIn();
+      click(tab("Skills"));
+      await waitFor(() => rows().length >= 18, 15000);
+      const before = rows().length;
+      const name = "Smoke Skill " + Date.now();
+      click($$(".panel-head button").find((b) => text(b).includes("New skill")));
+      await waitFor(() => $("#sName"));
+      setVal($("#sName"), name);
+      click($('.modal-card button[type="submit"]'));
+      await waitFor(() => rows().length === before + 1, 15000);
+      note("table " + before + " -> " + rows().length);
+
+      const list = await api("/skills");
+      const made = list.body.skills.find((s) => s.name === name);
+      if (!made) throw new Error("new skill is not in the database");
+      note("stored in Atlas: " + made.name + " (" + made.category + ", level " + made.level + ")");
+
+      const target = $$(".tbl tbody tr").find((r) => text(r).includes(name));
+      click(target.querySelector(".btn-danger"));
+      await waitFor(() => $(".dialog-card"));
+      click($(".dialog-card .btn-danger"));
+      await waitFor(() => !document.body.textContent.includes(name), 15000);
+      const after = await api("/skills");
+      if (after.body.skills.some((s) => s.name === name)) throw new Error("still in the database after delete");
+      note("deleted again, " + after.body.count + " skills left");
     `,
   },
   {
@@ -127,7 +170,7 @@ const SCENARIOS = [
       setVal($("#password"), ${JSON.stringify(PASSWORD)});
       click($('button[type="submit"]'));
       await waitFor(() => location.pathname === "/admin", 15000);
-      await waitFor(() => $$(".stats .stat").length === 4, 15000);
+      await waitFor(() => $$(".stats .stat").length === 5, 15000);
       if (!tok()) throw new Error("no JWT in localStorage");
       note("token stored (" + tok().length + " chars), stats=" + $$(".stats .stat").map((s) => text(s)).join(","));
 

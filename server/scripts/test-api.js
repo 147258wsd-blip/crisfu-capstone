@@ -167,6 +167,53 @@ async function run() {
     await call("DELETE", `/projects/${hijack.body.project._id}`, { token: bobToken });
   }
 
+  console.log("\nskills");
+  let skillId = "";
+  {
+    const r = await call("GET", "/skills");
+    const list = r.body.skills || [];
+    check("GET /skills returns the seeded toolbox", r.status === 200 && list.length >= 18, `${list.length} items`);
+    check("skill has name/category/level", !!(list[0] && list[0].name && list[0].category && typeof list[0].level === "number"));
+
+    const backend = await call("GET", "/skills?category=Backend");
+    check("?category= filters", backend.status === 200 && backend.body.skills.every((s) => s.category === "Backend"), `${backend.body.count} items`);
+
+    const strong = await call("GET", "/skills?minLevel=5");
+    check("?minLevel= filters", strong.status === 200 && strong.body.skills.every((s) => s.level >= 5), `${strong.body.count} items`);
+
+    const badSkillId = await call("GET", "/skills/not-an-id");
+    check("skill bad id -> 404 not 500", badSkillId.status === 404, `status ${badSkillId.status}`);
+
+    const unauthSkill = await call("POST", "/skills", { body: { name: "Rust" } });
+    check("create skill without token -> 401", unauthSkill.status === 401, `status ${unauthSkill.status}`);
+
+    const made = await call("POST", "/skills", { token: aliceToken, body: { name: "Smoke Skill", category: "Tools", level: 4, order: 99 } });
+    skillId = made.body.skill ? made.body.skill._id : "";
+    check("create skill -> 201", made.status === 201 && !!skillId, `status ${made.status}`);
+    check("skill owner comes from the token", !!(made.body.skill && made.body.skill.user && made.body.skill.user.username));
+
+    const badCat = await call("POST", "/skills", { token: aliceToken, body: { name: "Nope", category: "Nonsense" } });
+    check("unknown category -> 400", badCat.status === 400, `status ${badCat.status}`);
+
+    const badLevel = await call("POST", "/skills", { token: aliceToken, body: { name: "Nope", category: "Tools", level: 9 } });
+    check("level out of range -> 400", badLevel.status === 400, `status ${badLevel.status}`);
+
+    const edited = await call("PUT", `/skills/${skillId}`, { token: aliceToken, body: { level: 5 } });
+    check("owner can update a skill", edited.status === 200 && edited.body.skill.level === 5, `status ${edited.status}`);
+
+    const stolenSkill = await call("PUT", `/skills/${skillId}`, { token: bobToken, body: { name: "Hijacked" } });
+    check("another user cannot update it -> 403", stolenSkill.status === 403, `status ${stolenSkill.status}`);
+
+    const stolenSkillDel = await call("DELETE", `/skills/${skillId}`, { token: bobToken });
+    check("another user cannot delete it -> 403", stolenSkillDel.status === 403, `status ${stolenSkillDel.status}`);
+
+    const delSkill = await call("DELETE", `/skills/${skillId}`, { token: aliceToken });
+    check("owner can delete a skill", delSkill.status === 200, `status ${delSkill.status}`);
+
+    const goneSkill = await call("GET", `/skills/${skillId}`);
+    check("deleted skill is really gone", goneSkill.status === 404);
+  }
+
   console.log("\nblog + comments");
   let postId = "";
   {
@@ -220,7 +267,10 @@ async function run() {
   console.log("\nadmin + errors");
   {
     const stats = await call("GET", "/admin/stats", { token: aliceToken });
-    check("stats returns four counters", stats.status === 200 && ["projects", "posts", "comments", "inbox"].every((k) => typeof stats.body[k] === "number"));
+    check(
+      "stats returns five counters",
+      stats.status === 200 && ["projects", "skills", "posts", "comments", "inbox"].every((k) => typeof stats.body[k] === "number")
+    );
 
     const act = await call("GET", "/admin/activity", { token: aliceToken });
     check("activity returns an array", act.status === 200 && Array.isArray(act.body.activity) && act.body.activity.length > 0);

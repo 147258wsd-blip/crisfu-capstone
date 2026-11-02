@@ -10,6 +10,7 @@ import { api } from "../services/api";
 
 const PROJECT_CATS = ["Full-stack", "Frontend", "Experiment"];
 const POST_CATS = ["Engineering", "Backend", "Frontend", "Algorithms"];
+const SKILL_CATS = ["Frontend", "Backend", "Tools", "Design", "Other"];
 
 /* ---------------- create / edit form ---------------- */
 function ItemForm({ kind, item, onCancel, onSave }) {
@@ -152,6 +153,91 @@ function ItemForm({ kind, item, onCancel, onSave }) {
   );
 }
 
+/* ---------------- skill form ----------------
+   Smaller than ItemForm on purpose: a skill is a name, a column and a
+   level. `order` decides the position inside its group. */
+function SkillForm({ item, onCancel, onSave }) {
+  const [form, setForm] = useState({
+    name: item ? item.name : "",
+    category: item ? item.category : "Frontend",
+    level: item ? item.level : 3,
+    order: item ? item.order : 0,
+  });
+  const [invalid, setInvalid] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const set = (key) => (e) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+    if (invalid) setInvalid(false);
+  };
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.name.trim()) {
+      setInvalid(true);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave({
+        name: form.name.trim(),
+        category: form.category,
+        level: Number(form.level) || 3,
+        order: Number(form.order) || 0,
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form className="modal-card" onSubmit={submit} noValidate>
+      <h3>{item ? "Edit" : "New"} skill</h3>
+
+      <div className={"field" + (invalid ? " invalid" : "")}>
+        <label htmlFor="sName">Name</label>
+        <input id="sName" value={form.name} onChange={set("name")} placeholder="React" />
+        <div className="err">A name is required.</div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="field">
+          <label htmlFor="sCat">Category</label>
+          <select id="sCat" value={form.category} onChange={set("category")}>
+            {SKILL_CATS.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="sLevel">Level (1–5)</label>
+          <select id="sLevel" value={form.level} onChange={set("level")}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="sOrder">Order</label>
+        <input id="sOrder" type="number" min="0" value={form.order} onChange={set("order")} />
+      </div>
+
+      <div className="modal-foot">
+        <button className="btn btn-ghost" type="button" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+        <button className="btn btn-primary" type="submit" disabled={saving}>
+          {saving ? <span className="spinner" /> : item ? "Save changes" : "Create"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 /* ---------------- dashboard ---------------- */
 export default function Admin() {
   useTitle("Admin");
@@ -165,18 +251,20 @@ export default function Admin() {
   const [busy, setBusy] = useState(false);
 
   const dash = useApi(async () => {
-    const [projects, posts, log, counts, inbox] = await Promise.all([
+    const [projects, skills, posts, log, counts, inbox] = await Promise.all([
       api.admin.projects(),
+      api.admin.skills(),
       api.admin.posts(),
       api.admin.log(),
       api.admin.counts(),
       api.contact.list(),
     ]);
-    return { projects, posts, log, counts, inbox };
+    return { projects, skills, posts, log, counts, inbox };
   }, []);
 
   const data = dash.data;
   const projects = useMemo(() => (data ? data.projects : []), [data]);
+  const skills = useMemo(() => (data ? data.skills : []), [data]);
   const posts = useMemo(() => (data ? data.posts : []), [data]);
   const inbox = useMemo(() => (data ? data.inbox : []), [data]);
   const unread = useMemo(() => inbox.filter((m) => !m.read).length, [inbox]);
@@ -197,6 +285,9 @@ export default function Admin() {
       if (kind === "project") {
         if (item) await api.admin.updateProject(item.id, payload);
         else await api.admin.createProject(payload);
+      } else if (kind === "skill") {
+        if (item) await api.admin.updateSkill(item.id, payload);
+        else await api.admin.createSkill(payload);
       } else if (item) await api.admin.updatePost(item.id, payload);
       else await api.admin.createPost(payload);
 
@@ -213,6 +304,7 @@ export default function Admin() {
     setBusy(true);
     try {
       if (kind === "project") await api.admin.deleteProject(item.id);
+      else if (kind === "skill") await api.admin.deleteSkill(item.id);
       else await api.admin.deletePost(item.id);
       setConfirming(null);
       toast("Deleted");
@@ -241,7 +333,8 @@ export default function Admin() {
         <p>
           Writes go through <code className="code-chip">services/api.js</code>, which calls the deployed API with
           the JWT from your session: <code className="code-chip">/api/projects</code>,{" "}
-          <code className="code-chip">/api/blog</code> and <code className="code-chip">/api/contact</code>.
+          <code className="code-chip">/api/skills</code>, <code className="code-chip">/api/blog</code> and{" "}
+          <code className="code-chip">/api/contact</code>.
         </p>
       </div>
 
@@ -250,6 +343,7 @@ export default function Admin() {
           {[
             ["overview", "◈ Overview"],
             ["projects", "▤ Projects"],
+            ["skills", "◇ Skills"],
             ["posts", "✎ Blog posts"],
             ["inbox", `✉ Inbox${unread ? ` (${unread})` : ""}`],
           ].map(([key, label]) => (
@@ -287,6 +381,10 @@ export default function Admin() {
                 <div className="stat">
                   <div className="l">Projects</div>
                   <div className="v">{data.counts.projects}</div>
+                </div>
+                <div className="stat">
+                  <div className="l">Skills</div>
+                  <div className="v">{data.counts.skills ?? skills.length}</div>
                 </div>
                 <div className="stat">
                   <div className="l">Posts</div>
@@ -365,6 +463,55 @@ export default function Admin() {
                               Edit
                             </button>
                             <button className="btn btn-danger btn-sm" onClick={() => setConfirming({ kind: "project", item: p })}>
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {data && tab === "skills" && (
+            <div className="panel">
+              <div className="panel-head">
+                <h2>
+                  Skills <span style={{ color: "var(--dim)", fontWeight: 400 }}>({skills.length})</span>
+                </h2>
+                <button className="btn btn-primary btn-sm" onClick={() => setEditing({ kind: "skill", item: null })}>
+                  + New skill
+                </button>
+              </div>
+              <div className="panel-body">
+                <table className="tbl">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Category</th>
+                      <th>Level</th>
+                      <th>Order</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {skills.map((s) => (
+                      <tr key={s.id}>
+                        <td>
+                          <div className="t-title">{s.name}</div>
+                          <div className="t-sub">/skills/{s.id}</div>
+                        </td>
+                        <td>{s.category}</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 12 }}>{s.level}/5</td>
+                        <td style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--dim)" }}>{s.order}</td>
+                        <td>
+                          <div className="ops">
+                            <button className="btn btn-ghost btn-sm" onClick={() => setEditing({ kind: "skill", item: s })}>
+                              Edit
+                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => setConfirming({ kind: "skill", item: s })}>
                               Delete
                             </button>
                           </div>
@@ -489,15 +636,18 @@ export default function Admin() {
       </div>
 
       <Modal open={!!editing} onClose={() => setEditing(null)}>
-        {editing && (
-          <ItemForm kind={editing.kind} item={editing.item} onCancel={() => setEditing(null)} onSave={save} />
-        )}
+        {editing &&
+          (editing.kind === "skill" ? (
+            <SkillForm item={editing.item} onCancel={() => setEditing(null)} onSave={save} />
+          ) : (
+            <ItemForm kind={editing.kind} item={editing.item} onCancel={() => setEditing(null)} onSave={save} />
+          ))}
       </Modal>
 
       <Modal open={!!confirming} onClose={() => setConfirming(null)} className="dialog-backdrop">
         {confirming && (
           <div className="dialog-card" role="alertdialog" aria-modal="true">
-            <h3>Delete “{confirming.item.title}”?</h3>
+            <h3>Delete “{confirming.item.title || confirming.item.name}”?</h3>
             <p>This removes it from the dashboard for good. There is no undo in mock mode.</p>
             <div className="row">
               <button className="btn btn-ghost btn-sm" onClick={() => setConfirming(null)} disabled={busy}>

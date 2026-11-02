@@ -11,6 +11,7 @@ const Project = require("./models/Project");
 const BlogPost = require("./models/BlogPost");
 const Comment = require("./models/Comment");
 const Message = require("./models/Message");
+const Skill = require("./models/Skill");
 
 const data = require("./data/seed.json");
 
@@ -107,6 +108,24 @@ async function seed() {
   }
   console.log(`[seed] posts: ${created} created, ${updated} updated`);
 
+  /* The toolbox used to be a constant in Home.jsx. It is a collection now,
+     so it is upserted by (user, name) — running the seed twice must not
+     double the grid. */
+  if (Array.isArray(data.skills) && data.skills.length) {
+    created = 0;
+    updated = 0;
+    for (const raw of data.skills) {
+      const existed = await Skill.findOne({ user: owner._id, name: raw.name }).select("_id");
+      await Skill.findOneAndUpdate(
+        { user: owner._id, name: raw.name },
+        { $set: { category: raw.category, level: raw.level, order: raw.order || 0, user: owner._id } },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
+      existed ? updated++ : created++;
+    }
+    console.log(`[seed] skills: ${created} created, ${updated} updated`);
+  }
+
   /* a couple of comments on the newest post, so the blog does not open
      on an empty thread — only inserted when the thread is empty */
   const firstPost = await BlogPost.findOne().sort({ createdAt: -1 });
@@ -129,6 +148,7 @@ async function seed() {
   const counts = {
     users: await User.countDocuments(),
     projects: await Project.countDocuments(),
+    skills: await Skill.countDocuments(),
     posts: await BlogPost.countDocuments(),
     comments: await Comment.countDocuments(),
     messages: await Message.countDocuments(),

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import ProjectCard from "../components/ProjectCard";
@@ -6,8 +7,12 @@ import ErrorState from "../components/ErrorState";
 import { ProjectGridSkeleton, PostListSkeleton } from "../components/Skeleton";
 import { useApi, useTitle } from "../hooks/useApi";
 import { api } from "../services/api";
+import { groupSkills } from "../services/adapters";
 
-const SKILLS = [
+/* Shown only when /api/skills is empty or unreachable — the section is part
+   of the page, so it should never collapse to nothing because a request
+   failed. The live list comes from the API and is grouped below. */
+const SKILLS_FALLBACK = [
   { title: "Frontend", items: ["React", "JavaScript", "TypeScript", "Tailwind", "HTML / CSS", "Vite"] },
   { title: "Backend", items: ["Node.js", "Express", "MongoDB", "Mongoose", "REST API", "JWT"] },
   { title: "Tools", items: ["Git", "Postman", "Vercel", "Render", "Figma", "Linux"] },
@@ -18,6 +23,12 @@ export default function Home() {
 
   const projectsQ = useApi(() => api.projects.list(), []);
   const postsQ = useApi(() => api.posts.list(), []);
+  const skillsQ = useApi(() => api.skills.list(), []);
+
+  const skillGroups = useMemo(() => {
+    const live = groupSkills(skillsQ.data || []);
+    return live.length ? live : SKILLS_FALLBACK;
+  }, [skillsQ.data]);
 
   return (
     <>
@@ -232,7 +243,7 @@ export default function Home() {
             </div>
           </Reveal>
           <div className="skills">
-            {SKILLS.map((group, i) => (
+            {skillGroups.map((group, i) => (
               <Reveal className="skill-box" key={group.title} delay={i * 80}>
                 <h4>{group.title}</h4>
                 <div className="skill-list">

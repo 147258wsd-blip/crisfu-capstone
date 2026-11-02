@@ -258,6 +258,57 @@ export function encodeComment(text) {
   return { body: str(text) };
 }
 
+/* ---------- skill ---------- */
+
+/* The spec has no fixed Skill columns, so the model is deliberately small:
+   name / category / level (1-5) / order. The home page only needs the
+   grouped names, the dashboard needs the level to edit it. */
+export function adaptSkill(raw) {
+  if (!raw) return null;
+  return {
+    id: str(raw._id || raw.id),
+    name: str(raw.name, "Untitled"),
+    category: str(raw.category, "Other"),
+    level: Math.min(5, Math.max(1, Number(raw.level) || 3)),
+    order: Number(raw.order) || 0,
+  };
+}
+
+export function encodeSkill(s = {}) {
+  return {
+    name: str(s.name),
+    category: str(s.category, "Other"),
+    level: Math.min(5, Math.max(1, Number(s.level) || 3)),
+    order: Number(s.order) || 0,
+  };
+}
+
+/* "Frontend, Backend, Tools" in a fixed order rather than alphabetically —
+   the toolbox reads as a progression and a category added later should not
+   silently jump to the front. */
+export const SKILL_CATEGORIES = ["Frontend", "Backend", "Tools", "Design", "Other"];
+
+export function groupSkills(list) {
+  const buckets = new Map();
+  for (const s of list || []) {
+    const key = s.category || "Other";
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(s);
+  }
+
+  const rank = (c) => {
+    const i = SKILL_CATEGORIES.indexOf(c);
+    return i === -1 ? SKILL_CATEGORIES.length : i;
+  };
+
+  return [...buckets.entries()]
+    .sort((a, b) => rank(a[0]) - rank(b[0]))
+    .map(([title, items]) => ({
+      title,
+      items: items.slice().sort((a, b) => a.order - b.order || a.name.localeCompare(b.name)).map((s) => s.name),
+    }));
+}
+
 /* ---------- message ---------- */
 
 export function encodeMessage(p = {}) {

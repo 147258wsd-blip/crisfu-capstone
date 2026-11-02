@@ -1,7 +1,7 @@
 # Cris Fu — Capstone API
 
 The back-end half of the project: Express + MongoDB Atlas + Mongoose, JWT auth, five
-models, 22 endpoints, one error handler. The React SPA in `../cris-react` is the only
+models, 27 endpoints, one error handler. The React SPA in `../cris-react` is the only
 client.
 
 > **Status** — built, seeded, and verified end to end against a live Atlas cluster.
@@ -43,9 +43,9 @@ tests create and leaves the seeded content untouched.
 server/
 ├── server.js              helmet, cors, json, request log, routes, 404, error handler
 ├── config/db.js           Atlas connection (+ optional DNS override)
-├── models/                User, Project, BlogPost, Comment, Message
+├── models/                User, Project, Skill, BlogPost, Comment, Message
 ├── controllers/           one per model + adminController for the dashboard
-├── routes/                five resource routers + an index that documents itself
+├── routes/                six resource routers + an index that documents itself
 ├── middleware/
 │   ├── auth.js            signToken, protect, owns(model, field)
 │   ├── validate.js        validId — a malformed id is a 404, not a 500
@@ -75,6 +75,7 @@ Field names are the ones the spec fixes — no renaming for convenience.
 |---|---|---|
 | **User** | `username`, `email`, `password`, timestamps | password hashed by a `pre('save')` hook (bcrypt, 10 rounds), `select: false`, `comparePassword()` |
 | **Project** | `title`, `description`, `imageUrl`, `repoUrl`, `liveUrl`, `user` → User, timestamps | `description` required, owner required |
+| **Skill** | `name`, `category`, `level` 1–5, `order`, `user` → User, timestamps | `category` from a fixed list (Frontend/Backend/Tools/Design/Other); `order` keeps the toolbox stable |
 | **BlogPost** | `title`, `content`, `author` → User, timestamps | `content` a `String` as specified |
 | **Comment** | `body`, `author` → User, `post` → BlogPost, timestamps | both refs required |
 | **Message** | `name`, `email`, `message`, `read`, timestamps | detached from User on purpose — visitors write without an account |
@@ -102,6 +103,11 @@ All under `/api`. `GET /api` returns this map at runtime.
 | POST | `/projects` | Bearer | owner taken from the token, never the body |
 | PUT/PATCH | `/projects/:id` | Bearer + owner | 403 for anyone else |
 | DELETE | `/projects/:id` | Bearer + owner | |
+| GET | `/skills` | — | `?category=` and `?minLevel=` filter; sorted by category then `order` |
+| GET | `/skills/:id` | — | 404 on a malformed id |
+| POST | `/skills` | Bearer | `name` required, `level` 1–5, `category` from the fixed list |
+| PUT/PATCH | `/skills/:id` | Bearer + owner | 403 for anyone else |
+| DELETE | `/skills/:id` | Bearer + owner | |
 | GET | `/blog` | — | author populated |
 | GET | `/blog/:id` | — | includes `commentCount` |
 | POST | `/blog` | Bearer | |

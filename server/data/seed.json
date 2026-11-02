@@ -471,5 +471,115 @@
         }
       ]
     }
+  ],
+  "skills": [
+    {
+      "name": "React",
+      "category": "Frontend",
+      "level": 5,
+      "order": 1
+    },
+    {
+      "name": "JavaScript",
+      "category": "Frontend",
+      "level": 5,
+      "order": 2
+    },
+    {
+      "name": "TypeScript",
+      "category": "Frontend",
+      "level": 4,
+      "order": 3
+    },
+    {
+      "name": "Tailwind",
+      "category": "Frontend",
+      "level": 4,
+      "order": 4
+    },
+    {
+      "name": "HTML / CSS",
+      "category": "Frontend",
+      "level": 5,
+      "order": 5
+    },
+    {
+      "name": "Vite",
+      "category": "Frontend",
+      "level": 4,
+      "order": 6
+    },
+    {
+      "name": "Node.js",
+      "category": "Backend",
+      "level": 5,
+      "order": 1
+    },
+    {
+      "name": "Express",
+      "category": "Backend",
+      "level": 4,
+      "order": 2
+    },
+    {
+      "name": "MongoDB",
+      "category": "Backend",
+      "level": 4,
+      "order": 3
+    },
+    {
+      "name": "Mongoose",
+      "category": "Backend",
+      "level": 4,
+      "order": 4
+    },
+    {
+      "name": "REST API",
+      "category": "Backend",
+      "level": 5,
+      "order": 5
+    },
+    {
+      "name": "JWT",
+      "category": "Backend",
+      "level": 4,
+      "order": 6
+    },
+    {
+      "name": "Git",
+      "category": "Tools",
+      "level": 4,
+      "order": 1
+    },
+    {
+      "name": "Postman",
+      "category": "Tools",
+      "level": 4,
+      "order": 2
+    },
+    {
+      "name": "Vercel",
+      "category": "Tools",
+      "level": 4,
+      "order": 3
+    },
+    {
+      "name": "Render",
+      "category": "Tools",
+      "level": 3,
+      "order": 4
+    },
+    {
+      "name": "Figma",
+      "category": "Tools",
+      "level": 3,
+      "order": 5
+    },
+    {
+      "name": "Linux",
+      "category": "Tools",
+      "level": 4,
+      "order": 6
+    }
   ]
 }

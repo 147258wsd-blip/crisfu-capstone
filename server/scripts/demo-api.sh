@@ -90,6 +90,17 @@ printf '   count=%s\n' "$PROJECTS"
 show 200
 
 PID=$(printf '%s' "$BODY" | jget projects.0._id)
+
+# ---------------------------------------------------------------- 3b
+step "3b   The toolbox is a collection too" "GET /skills — projects, skills, posts and messages all follow the same shape; ?category= narrows it"
+req GET /skills
+expect 200
+printf '   count=%s\n' "$(printf '%s' "$BODY" | jget count)"
+show 200
+req GET "/skills?category=Backend"
+expect 200
+printf '   Backend only: count=%s\n' "$(printf '%s' "$BODY" | jget count)"
+
 step "4/9  Read one document" "GET /projects/$PID — populate + single-document shape"
 req GET "/projects/$PID"
 expect 200; show 260

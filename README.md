@@ -33,6 +33,7 @@ Verification:
 curl -I https://147258wsd-blip.github.io/crisfu-capstone/               # 200 text/html, no attachment header
 curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/health     # {"success":true,"status":"ok",...}
 curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/projects   # {"success":true,"count":6,...}
+curl https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api/skills     # {"success":true,"count":18,...}
 ```
 
 Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also writes a
@@ -44,7 +45,7 @@ Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also 
 
 | Folder | What it is |
 |---|---|
-| `server/` | Express API — models, JWT auth, ownership checks, 22 endpoints, seed script. See `server/README.md` for the full endpoint table. |
+| `server/` | Express API — models, JWT auth, ownership checks, 27 endpoints, seed script. See `server/README.md` for the full endpoint table. |
 | `cris-react/` | The client folder — React 18 + Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. |
 
 Pages: `/` home, `/projects` + `/projects/:id`, `/blog` + `/blog/:id`, `/debate`, `/contact`,
@@ -67,6 +68,11 @@ Everything is mounted under `/api`; `GET /api` returns this same map at runtime.
 | POST | `/projects` | Bearer | owner comes from the token, never from the body |
 | PUT/PATCH | `/projects/:id` | Bearer + owner | 403 for anyone else |
 | DELETE | `/projects/:id` | Bearer + owner | |
+| GET | `/skills` | — | `?category=` and `?minLevel=` filter; sorted by category then `order` |
+| GET | `/skills/:id` | — | 404 on a malformed id |
+| POST | `/skills` | Bearer | level must be 1–5, category from a fixed list |
+| PUT/PATCH | `/skills/:id` | Bearer + owner | 403 for anyone else |
+| DELETE | `/skills/:id` | Bearer + owner | |
 | GET | `/blog` | — | author populated |
 | GET | `/blog/:id` | — | includes `commentCount` |
 | POST | `/blog` | Bearer | |
@@ -78,7 +84,7 @@ Everything is mounted under `/api`; `GET /api` returns this same map at runtime.
 | POST | `/contact` | — | 400 on an invalid email |
 | GET | `/contact` | Bearer | admin inbox, newest first |
 | PUT/PATCH | `/contact/:id/read` | Bearer | mark one message as read. The client sends **PUT**: the Function Compute HTTP trigger rejects PATCH at the gateway (403) before Express sees it, so both verbs point at the same handler. |
-| GET | `/admin/stats` | Bearer | four counters via `countDocuments` |
+| GET | `/admin/stats` | Bearer | five counters via `countDocuments` |
 | GET | `/admin/activity` | Bearer | merged feed of the 10 newest events |
 
 Errors are always JSON with the same shape:
