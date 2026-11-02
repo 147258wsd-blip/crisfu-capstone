@@ -2,6 +2,17 @@
 
 Capstone project. A REST API built with Express + MongoDB, and a React client that talks to it.
 
+Two things worth knowing before reading the code:
+
+- **Every project record says how far it got.** `status` is one of `live` (deployed and
+  testable), `prototype` (runs, not a product) or `concept` (design only). The seeded data has
+  one live project — this site — one playable prototype, and four concepts. The UI renders a
+  badge from that field and hides the "Source code" button when `repoUrl` is empty, so there
+  are no buttons that go nowhere.
+- **The debate simulator's source ships in this archive** at `prototypes/debate-simulator.html`
+  (a single self-contained file, no dependencies) and is also served at
+  `/debate-simulator/` on the deployed site.
+
 ---
 
 ## Live deployment
