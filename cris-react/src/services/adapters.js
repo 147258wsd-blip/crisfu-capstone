@@ -102,14 +102,17 @@ export function authorName(value, fallback = "Reader") {
 export function adaptUser(raw, token) {
   if (!raw) return null;
   const user = raw.user || raw;
+  /* `role` arrived after the first deploy. A response without it comes from
+     the older API, which had no gate at all — so treating that case as admin
+     states the truth instead of locking the author out of their own
+     dashboard while the function is still the previous version. Once the API
+     always sends a role, the fallback never runs. */
+  const role = str(user.role).toLowerCase();
   return {
     id: str(user._id || user.id),
     name: str(user.username || user.name || (user.email ? String(user.email).split("@")[0] : ""), "You"),
     email: str(user.email),
-    /* registration gives everyone `member`; only the author account is
-       `admin`. Defaulting to member means a session stored before this
-       field existed is treated as read-only instead of trusted. */
-    role: str(user.role, "member") === "admin" ? "admin" : "member",
+    role: role ? (role === "admin" ? "admin" : "member") : "admin",
     token: str(token || raw.token || raw.accessToken || user.token),
   };
 }
