@@ -1,10 +1,29 @@
 # Cris Fu — Personal Portfolio, Blog & Debate Simulator
 
-Capstone project. A REST API built with Express + MongoDB, and a React client that talks to it.
+## Overview
+
+Capstone project: a personal portfolio and blog, built as two deployable halves — a REST API
+(Express + MongoDB) and a React client that calls it over the public internet. Whatever the
+visitor sees is read from the database, not hard-coded into the page.
+
+| Feature | What it does | Who can use it |
+|---|---|---|
+| Projects | Six records, filterable by category, each with a status badge and optional source/demo links | anyone |
+| Skills | Eighteen records grouped by category, each rated 1–5 | anyone |
+| Blog | Posts with a detail page and a comment thread under each one | anyone reads; a signed-in member may comment |
+| Contact | A form that writes to a message inbox; the author reads and marks messages | anyone sends; admin reads |
+| Accounts | Register and log in; the server returns a JWT and a role | anyone |
+| Admin dashboard | Counters, an activity feed, and create/edit/delete for projects, skills and posts | `admin` only, and only for records they own |
+| Debate simulator | A playable two-sided debate trainer, one self-contained HTML file, also served at `/debate-simulator/` | anyone |
 
 **Student ID 24998018 · Fu Zhenyu** — submitted as `24998018_FuZhenyu_CapstoneProject.zip`.
-The two live URLs are in [Live deployment](#live-deployment) below; the endpoint list with
-request bodies starts at [API endpoints](#api-endpoints).
+
+| The submission asks for | Where to find it |
+|---|---|
+| An overview of the project | [Overview](#overview) |
+| Live front-end and back-end URLs | [Live deployment](#live-deployment) |
+| Every endpoint, its purpose, and the data it expects | [API endpoints](#api-endpoints), then [Request bodies and query parameters](#request-bodies-and-query-parameters) |
+| How to run it locally, including environment variables | [Run it locally](#run-it-locally) |
 
 Two things worth knowing before reading the code:
 
