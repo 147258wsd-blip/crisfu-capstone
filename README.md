@@ -77,10 +77,12 @@ Deep links (`/blog/:id`, `/admin`) survive a hard refresh: `publish:pages` also 
 
 ## Two halves
 
-| Folder | What it is |
-|---|---|
-| `server/` | Express API — models, JWT auth, ownership checks, 27 endpoints, seed script. See `server/README.md` for the full endpoint table. |
-| `cris-react/` | The client folder — React 18 + Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. |
+The brief calls them the **server** and **client** folders. In this repository they are:
+
+| Brief says | In this repo | What it is |
+|---|---|---|
+| `server/` | `server/` | Express API — models, JWT auth, ownership checks, 27 endpoints, seed script. See `server/README.md` for the full endpoint table. |
+| `client/` | **`cris-react/`** | The client folder — React 18 + Vite, React Router, an `adapters` layer that maps API documents onto view models, and a mock fallback for offline development. Named for the site, not renamed for the submission. |
 
 Pages: `/` home, `/projects` + `/projects/:id`, `/blog` + `/blog/:id`, `/debate`, `/contact`,
 `/login`, `/register`, `/admin` (admin only — a member who signs in gets an explanation page).
