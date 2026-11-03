@@ -11,51 +11,51 @@ const mongoose = require("mongoose");
 if (process.env.DNS_SERVERS) {
   const servers = process.env.DNS_SERVERS.split(",").map((s) => s.trim()).filter(Boolean);
   dns.setServers(servers);
-  console.log("使用自定义 DNS:", servers.join(", "));
+  console.log("using custom DNS:", servers.join(", "));
 }
 
 const URI = process.env.MONGODB_URI;
 
 (async () => {
   if (!URI) {
-    console.error("FAIL  .env 里没有 MONGODB_URI");
+    console.error("FAIL  no MONGODB_URI in .env");
     process.exit(1);
   }
 
-  console.log("正在连接 Atlas ...");
+  console.log("connecting to Atlas ...");
   const t0 = Date.now();
 
   try {
     await mongoose.connect(URI, { serverSelectionTimeoutMS: 12000 });
   } catch (err) {
-    console.error("FAIL  连接失败:", err.message);
-    if (/bad auth/i.test(err.message)) console.error("  -> 用户名或密码不对");
+    console.error("FAIL  connection failed:", err.message);
+    if (/bad auth/i.test(err.message)) console.error("  -> wrong username or password");
     if (/ENOTFOUND|ETIMEDOUT|Could not connect/i.test(err.message))
-      console.error("  -> 网络不通，或 IP 白名单没有 0.0.0.0/0");
+      console.error("  -> network unreachable, or the IP allow-list is not 0.0.0.0/0");
     process.exit(1);
   }
 
   const ms = Date.now() - t0;
   const conn = mongoose.connection;
 
-  console.log("PASS  已连接，耗时 " + ms + "ms");
-  console.log("      数据库:", conn.name);
-  console.log("      主机  :", conn.host);
+  console.log("PASS  connected in " + ms + "ms");
+  console.log("      database:", conn.name);
+  console.log("      host    :", conn.host);
 
   const pingStart = Date.now();
   await conn.db.admin().ping();
-  console.log("PASS  ping 成功，" + (Date.now() - pingStart) + "ms");
+  console.log("PASS  ping ok, " + (Date.now() - pingStart) + "ms");
 
   // round-trip write/read/delete
   const probe = conn.db.collection("__probe");
   await probe.insertOne({ at: new Date(), note: "connectivity check" });
   const found = await probe.findOne({ note: "connectivity check" });
   await probe.deleteOne({ _id: found._id });
-  console.log("PASS  写入 / 读取 / 删除 正常");
+  console.log("PASS  write / read / delete all work");
 
   const collections = await conn.db.listCollections().toArray();
-  console.log("      当前集合:", collections.length ? collections.map((c) => c.name).join(", ") : "(空，等待导入)");
+  console.log("      collections:", collections.length ? collections.map((c) => c.name).join(", ") : "(empty, nothing imported yet)");
 
   await mongoose.disconnect();
-  console.log("DONE  连接串可用，可以开始建模型了");
+  console.log("DONE  connection string works — safe to build the models");
 })();

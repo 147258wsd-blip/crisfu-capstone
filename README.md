@@ -286,8 +286,11 @@ halves, as are `.git`, the build output (`cris-react/dist`) and any real `.env`.
 
 ```
 README.md               ← this file
-DEPLOY.md               the same app on a plain Ubuntu VPS (nginx + pm2)
-部署-FC.md              the Alibaba Cloud Function Compute walkthrough — the one in use
+DEPLOY.md               how the two submitted URLs are produced — start here
+DEPLOY-FUNCTION-COMPUTE.md   packaging and configuring the API on Function Compute (in use)
+DEPLOY-VPS.md           the same app on one Ubuntu VPS (nginx + pm2) — not the deployed path
+DEPLOY-FREE-HOSTING.md  free-tier options, and why Render / Railway / Zeabur / Vercel were ruled out
+CLOUD-ACCOUNT-SETUP.md  opening a Chinese cloud account — evaluated, not used
 server/                 Express API: models, controllers, routes, middleware, tests, seed
 cris-react/             React 18 + Vite client: pages, services, adapters, build scripts
 prototypes/             the debate simulator, as one self-contained HTML file
@@ -300,8 +303,12 @@ Counts worth quoting: **27 API endpoints** · **76 + 12 + 15** server-side asser
 
 ## Deploy notes
 
-- `部署-FC.md` — step-by-step Function Compute deployment (this is the one in use)
-- `DEPLOY.md` — the same app on a plain Ubuntu VPS with nginx + pm2
+- `DEPLOY.md` — what runs where, how each half is published, verification, day-to-day
+- `DEPLOY-FUNCTION-COMPUTE.md` — step-by-step Function Compute deployment (this is the one in
+  use), plus a troubleshooting table
+- `DEPLOY-VPS.md` — the same app on one Ubuntu VPS with nginx + pm2 (not the deployed path)
+- `DEPLOY-FREE-HOSTING.md` — free-tier options and why the well-known ones were ruled out
+- `CLOUD-ACCOUNT-SETUP.md` — real-name verification on a Chinese cloud, evaluated but not used
 - `server/Dockerfile` — single-container build (site + API), used by container hosts
 - `server/api/_app.js` — Express app shared by every hosting shape; `api/fc.js` and
   `api/[...slug].js` only translate the platform's request format into Node's `req`/`res`

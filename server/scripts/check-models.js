@@ -40,15 +40,15 @@ function ok(label, cond, extra = "") {
     email: "selftest@example.com",
     password: "secret123",
   });
-  ok("User 创建成功", !!user._id, user._id.toString());
+  ok("user created", !!user._id, user._id.toString());
 
   const stored = await User.findById(user._id).select("+password");
-  ok("密码已哈希（60 字符 bcrypt）", /^\$2[aby]\$/.test(stored.password), stored.password.slice(0, 7) + "...");
-  ok("密码可校验", await stored.comparePassword("secret123"));
-  ok("错误密码被拒", !(await stored.comparePassword("wrong")));
+  ok("password hashed (60-char bcrypt)", /^\$2[aby]\$/.test(stored.password), stored.password.slice(0, 7) + "...");
+  ok("correct password verifies", await stored.comparePassword("secret123"));
+  ok("wrong password rejected", !(await stored.comparePassword("wrong")));
 
   const plain = await User.findById(user._id);
-  ok("password 默认不返回", plain.password === undefined);
+  ok("password is not returned by default", plain.password === undefined);
 
   let dupErr = null;
   try {
@@ -56,7 +56,7 @@ function ok(label, cond, extra = "") {
   } catch (e) {
     dupErr = e;
   }
-  ok("用户名唯一约束生效", dupErr && dupErr.code === 11000);
+  ok("username unique index enforced", dupErr && dupErr.code === 11000);
 
   let shortErr = null;
   try {
@@ -64,7 +64,7 @@ function ok(label, cond, extra = "") {
   } catch (e) {
     shortErr = e;
   }
-  ok("短密码被校验拦住", !!shortErr);
+  ok("short password rejected by validation", !!shortErr);
 
   /* --- Project --- */
   const project = await Project.create({
@@ -75,10 +75,10 @@ function ok(label, cond, extra = "") {
     liveUrl: "https://example.com",
     user: user._id,
   });
-  ok("Project 创建成功", !!project._id);
+  ok("project created", !!project._id);
 
   const populated = await Project.findById(project._id).populate("user", "username");
-  ok("Project.populate(user) 带出 username", populated.user && populated.user.username === TAG,
+  ok("Project.populate(user) brings back username", populated.user && populated.user.username === TAG,
      populated.user ? populated.user.username : "(null)");
 
   let reqErr = null;
@@ -87,7 +87,7 @@ function ok(label, cond, extra = "") {
   } catch (e) {
     reqErr = e;
   }
-  ok("Project 缺 user 被拒", !!reqErr);
+  ok("project without a user is rejected", !!reqErr);
 
   /* --- BlogPost + Comment --- */
   const post = await BlogPost.create({
@@ -95,20 +95,20 @@ function ok(label, cond, extra = "") {
     content: JSON.stringify({ body: [{ type: "p", text: "hi" }] }),
     author: user._id,
   });
-  ok("BlogPost 创建成功", !!post._id);
+  ok("post created", !!post._id);
 
   const comment = await Comment.create({ body: "nice post", author: user._id, post: post._id });
-  ok("Comment 创建成功", !!comment._id);
+  ok("comment created", !!comment._id);
 
   const withAuthor = await Comment.findById(comment._id).populate("author", "username");
-  ok("Comment.populate(author) 带出 username", withAuthor.author && withAuthor.author.username === TAG);
+  ok("Comment.populate(author) brings back username", withAuthor.author && withAuthor.author.username === TAG);
 
   const commentsOfPost = await Comment.find({ post: post._id }).populate("author", "username");
-  ok("按 post 查评论", commentsOfPost.length === 1, `${commentsOfPost.length} 条`);
+  ok("comments queryable by post", commentsOfPost.length === 1, `${commentsOfPost.length} found`);
 
   /* --- Message --- */
   const msg = await Message.create({ name: "Visitor", email: "v@example.com", message: "Hello there" });
-  ok("Message 创建成功", !!msg._id && msg.read === false);
+  ok("message created", !!msg._id && msg.read === false);
   await Message.deleteOne({ _id: msg._id });
 
   /* --- cleanup --- */
@@ -122,13 +122,13 @@ function ok(label, cond, extra = "") {
     Project.countDocuments({ title: "Self test project" }),
     BlogPost.countDocuments({ title: "Self test post" }),
   ]);
-  ok("测试数据已清理", residue.every((n) => n === 0), residue.join("/"));
+  ok("test data cleaned up", residue.every((n) => n === 0), residue.join("/"));
 
   const indexes = await Project.collection.indexes();
-  console.log("      Project 索引:", indexes.map((i) => i.name).join(", "));
+  console.log("      Project indexes:", indexes.map((i) => i.name).join(", "));
 
   await disconnectDB();
-  console.log(failed === 0 ? "\nDONE  五个模型全部可用" : `\nFAILED  ${failed} 项未通过`);
+  console.log(failed === 0 ? "\nDONE  all five models work" : `\nFAILED  ${failed} check(s) failed`);
   process.exit(failed === 0 ? 0 : 1);
 })().catch(async (err) => {
   console.error("ERROR", err.message);

@@ -145,10 +145,10 @@ function report() {
   console.log("");
   log(`done: ${path.relative(REPO_DIR, ZIP)}  (${mb} MB, ${files} files)`);
   log("console settings:");
-  console.log("       运行环境   Node.js 20");
-  console.log("       处理器     fc.handler（api/fc.handler、index.handler 也都可用）");
-  console.log("       内存/超时  512 MB / 30 秒");
-  console.log("       触发器     HTTP 触发器，认证方式选「无需认证」");
+  console.log("       runtime        Node.js 20");
+  console.log("       handler        fc.handler (api/fc.handler and index.handler also resolve)");
+  console.log("       memory/timeout 512 MB / 30 s");
+  console.log("       trigger        HTTP trigger, authentication: No authentication");
   if (size > 100 * 1024 * 1024) {
     console.log("");
     log("WARNING: over 100 MB — the console upload will be rejected.");

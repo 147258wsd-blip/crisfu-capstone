@@ -1,16 +1,16 @@
 const dns = require("dns");
 const mongoose = require("mongoose");
 
-/* Windows 上 Node 的 c-ares 解析器有时会被本地 DNS 拒绝 SRV 查询
-   （nslookup 却正常）。允许通过 DNS_SERVERS 指定解析服务器；
-   Linux 主机（Railway / Zeabur / 任何容器）不设这个变量，走系统默认。 */
+/* On Windows, Node's c-ares resolver sometimes refuses SRV lookups
+   (while nslookup works). DNS_SERVERS lets you name the resolvers;
+   Linux hosts leave it unset and use the system default. */
 if (process.env.DNS_SERVERS) {
   const servers = process.env.DNS_SERVERS.split(",").map((s) => s.trim()).filter(Boolean);
   if (servers.length) dns.setServers(servers);
 }
 
 /**
- * 连接 MongoDB Atlas。失败时抛出，由调用方决定是否退出进程。
+ * Connects to MongoDB Atlas. Throws on failure; the caller decides whether to exit.
  */
 async function connectDB(uri = process.env.MONGODB_URI) {
   if (!uri) throw new Error("MONGODB_URI is not defined");

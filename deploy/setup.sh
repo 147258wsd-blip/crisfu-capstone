@@ -26,20 +26,20 @@ log()  { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m!!  %s\033[0m\n' "$*"; }
 die()  { printf '\033[1;31mxx  %s\033[0m\n' "$*" >&2; exit 1; }
 
-[ "$(id -u)" -eq 0 ] || die "请用 root 运行：sudo bash setup.sh"
-[ -d "$APP_DIR/server" ] || die "$APP_DIR/server 不存在——先把代码包解压到 $APP_DIR"
+[ "$(id -u)" -eq 0 ] || die "run as root: sudo bash setup.sh"
+[ -d "$APP_DIR/server" ] || die "$APP_DIR/server not found — unpack the archive into $APP_DIR"
 
 export DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------------------------------- 1. packages
-log "安装基础软件"
+log "installing base packages"
 apt-get update -y -qq
 apt-get install -y -qq curl ca-certificates git nginx >/dev/null
 
 # 2 GB of swap — a 2-core/2 GB box builds Vite uncomfortably close to the
 # ceiling, and an OOM kill mid-build is a confusing failure to debug.
 if [ ! -f /swapfile ]; then
-  log "添加 2G swap（防止构建时内存不足）"
+  log "adding 2 GB of swap (the build can exhaust 2 GB of RAM)"
   fallocate -l 2G /swapfile 2>/dev/null || dd if=/dev/zero of=/swapfile bs=1M count=2048 status=none
   chmod 600 /swapfile
   mkswap /swapfile >/dev/null
@@ -56,9 +56,9 @@ if command -v node >/dev/null 2>&1; then
 fi
 
 if [ "$need_node" -eq 1 ]; then
-  log "安装 Node.js 20"
+  log "installing Node.js 20"
   if ! curl -fsSL --max-time 30 https://deb.nodesource.com/setup_20.x -o /tmp/nodesource.sh; then
-    warn "NodeSource 不可达，改用 npmmirror 二进制包"
+    warn "NodeSource unreachable, falling back to npmmirror binaries"
     NODE_VER=v20.18.1
     curl -fsSL --max-time 180 \
       "https://npmmirror.com/mirrors/node/${NODE_VER}/node-${NODE_VER}-linux-x64.tar.xz" \
@@ -75,22 +75,22 @@ log "node $(node -v) / npm $(npm -v)"
 
 # ---------------------------------------------------------------- 3. pm2
 if ! command -v pm2 >/dev/null 2>&1; then
-  log "安装 pm2"
+  log "installing pm2"
   npm i -g pm2 --registry=$REGISTRY --silent
 fi
 
 # ---------------------------------------------------------------- 4. backend
-log "安装后端依赖"
+log "installing API dependencies"
 cd "$APP_DIR/server"
 npm ci --omit=dev --registry=$REGISTRY --silent
 
 if [ -n "$ENV_SRC" ] && [ -f "$ENV_SRC" ]; then
-  log "写入 .env（来自 $ENV_SRC）"
+  log "writing .env (from $ENV_SRC）"
   cp "$ENV_SRC" "$APP_DIR/server/.env"
 fi
 
 if [ ! -f "$APP_DIR/server/.env" ]; then
-  die "缺少 $APP_DIR/server/.env——请先上传，或从 .env.example 复制后填写 MONGODB_URI / JWT_SECRET"
+  die "missing $APP_DIR/server/.env — upload it, or copy .env.example and fill in MONGODB_URI / JWT_SECRET"
 fi
 
 # a .env written on Windows carries CRLF and a DNS override that only helps there
@@ -101,17 +101,17 @@ grep -q '^NODE_ENV=' "$APP_DIR/server/.env" && sed -i 's/^NODE_ENV=.*/NODE_ENV=p
 grep -q '^PORT=' "$APP_DIR/server/.env" && sed -i 's/^PORT=.*/PORT=5000/' "$APP_DIR/server/.env" \
   || echo 'PORT=5000' >> "$APP_DIR/server/.env"
 
-grep -q '^MONGODB_URI=mongodb' "$APP_DIR/server/.env" || die ".env 里的 MONGODB_URI 看起来不对"
-grep -q 'crisfu' "$APP_DIR/server/.env" || warn "MONGODB_URI 末尾似乎没有 /crisfu 库名，数据会写进 test 库"
+grep -q '^MONGODB_URI=mongodb' "$APP_DIR/server/.env" || die "MONGODB_URI in .env does not look right"
+grep -q 'crisfu' "$APP_DIR/server/.env" || warn "MONGODB_URI  seems to lack the /crisfu database name — data would land in the test database"
 
-log "启动 API（pm2）"
+log "starting the API (pm2)"
 pm2 delete crisfu-api >/dev/null 2>&1 || true
 pm2 start server.js --name crisfu-api --update-env >/dev/null
 pm2 save >/dev/null
 pm2 startup systemd -u root --hp /root >/dev/null 2>&1 || true
 
 # ---------------------------------------------------------------- 5. frontend
-log "构建前端"
+log "building the client"
 cd "$APP_DIR/cris-react"
 cat > .env.production <<'EOF'
 VITE_USE_MOCK=false
@@ -121,7 +121,7 @@ npm ci --registry=$REGISTRY --silent
 npm run build 2>&1 | tail -4
 
 # ---------------------------------------------------------------- 6. nginx
-log "配置 nginx"
+log "configuring nginx"
 cat > /etc/nginx/sites-available/crisfu <<'NGINX'
 server {
     listen 80 default_server;
@@ -155,12 +155,12 @@ NGINX
 
 ln -sf /etc/nginx/sites-available/crisfu /etc/nginx/sites-enabled/crisfu
 rm -f /etc/nginx/sites-enabled/default
-nginx -t >/dev/null 2>&1 || die "nginx 配置校验失败，运行 nginx -t 看详情"
+nginx -t >/dev/null 2>&1 || die "nginx config check failed — run nginx -t for details"
 systemctl enable nginx >/dev/null 2>&1 || true
 systemctl reload nginx
 
 # ---------------------------------------------------------------- 7. verify
-log "等待 API 就绪"
+log "waiting for the API"
 for i in $(seq 1 20); do
   if curl -fsS --max-time 2 http://127.0.0.1:5000/api/health >/dev/null 2>&1; then break; fi
   sleep 1
@@ -174,15 +174,15 @@ IP=$(curl -fsS --max-time 5 https://ifconfig.me 2>/dev/null || hostname -I | awk
 echo
 printf '=%.0s' {1..60}; echo
 if [ -n "$health" ]; then
-  echo "  后端  http://$IP/api"
+  echo "  API    http://$IP/api"
   echo "  $health"
 else
-  warn "API 未响应，看日志：pm2 logs crisfu-api --lines 40"
+  warn "API did not respond — see the logs: pm2 logs crisfu-api --lines 40"
 fi
-echo "  前端  http://$IP/          (HTTP $page)"
+echo "  Site   http://$IP/          (HTTP $page)"
 printf '=%.0s' {1..60}; echo
 echo
-echo "常用命令："
-echo "  pm2 logs crisfu-api        查看后端日志"
-echo "  pm2 restart crisfu-api     改完 .env 后重启"
-echo "  systemctl reload nginx     改完 nginx 后重载"
+echo "useful commands:"
+echo "  pm2 logs crisfu-api        API logs"
+echo "  pm2 restart crisfu-api     after changing .env"
+echo "  systemctl reload nginx     after changing nginx config"
