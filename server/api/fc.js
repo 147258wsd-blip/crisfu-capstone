@@ -205,8 +205,11 @@ async function handleHttp(ev, context) {
   const method = String(http.method || ev.httpMethod || "GET").toUpperCase();
   const rawPath = ev.rawPath || http.path || "/";
 
-  /* static assets and the SPA document never reach Express */
-  if ((method === "GET" || method === "HEAD") && !rawPath.startsWith("/api")) {
+  /* Static assets and the SPA document never reach Express. The API lives
+     under `/api/` exactly — a bare `startsWith("/api")` also swallowed
+     `/api-docs.html`, which is a page in public/, not an endpoint. */
+  const isApiRoute = rawPath === "/api" || rawPath.startsWith("/api/");
+  if ((method === "GET" || method === "HEAD") && !isApiRoute) {
     const hit = staticResult(rawPath);
     if (hit) return hit;
   }

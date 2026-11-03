@@ -2,6 +2,10 @@
 
 Capstone project. A REST API built with Express + MongoDB, and a React client that talks to it.
 
+**Student ID 24998018 · Fu Zhenyu** — submitted as `24998018_FuZhenyu_CapstoneProject.zip`.
+The two live URLs are in [Live deployment](#live-deployment) below; the endpoint list with
+request bodies starts at [API endpoints](#api-endpoints).
+
 Two things worth knowing before reading the code:
 
 - **Every project record says how far it got.** `status` is one of `live` (deployed and
@@ -133,23 +137,122 @@ Errors are always JSON with the same shape:
 { "success": false, "message": "…", "errors": { "field": "…" } }
 ```
 
+### Request bodies and query parameters
+
+Every body is JSON. `pick()` in `controllers/helpers.js` is the allow-list that sits between
+the request and the model: only the fields named below reach the database, so a body carrying
+`{"role":"admin"}` or `{"user":"<someone else's id>"}` is stripped rather than trusted.
+
+**Write endpoints — what to send**
+
+| Endpoint | Body | Rules |
+|---|---|---|
+| `POST /users/register` | `{ username, email, password }` | username 2–60, email must match a basic address pattern, password ≥ 6. Duplicate email or username → 409. `role` in the body is ignored. Returns `201 { success, token, user }`. |
+| `POST /users/login` | `{ email, password }` | Returns `200 { success, token, user }`. "No such email" and "wrong password" return the same message on purpose, so the endpoint cannot be used to enumerate accounts. |
+| `POST /projects` | `{ title, description, imageUrl?, repoUrl?, liveUrl? }` | `title` required, ≤ 120 chars. `description` is a string; the client stores a JSON payload in it (`blurb`, `problem`, `built`, `learned`, `stack`, `tags`, `status`, `statusNote`, `links`) and the API never parses it. `user` comes from the token, never from the body. |
+| `PUT`/`PATCH /projects/:id` | any subset of those five fields | 404 on a malformed id (not a cast error), 403 if the record is not yours |
+| `POST /skills` | `{ name, category, level?, order? }` | `name` required, ≤ 60. `category` ∈ `Frontend`, `Backend`, `Tools`, `Design`, `Other`. `level` 1–5, default 3. `order` default 0, used for display order. |
+| `PUT`/`PATCH /skills/:id` | any subset of `{ name, category, level, order }` | |
+| `POST /blog` | `{ title, content }` | both required; `title` ≤ 160. `content` is plain text or the client's JSON block payload. `author` comes from the token. |
+| `PUT`/`PATCH /blog/:id` | any subset of `{ title, content }` | |
+| `POST /blog/:postId/comments` | `{ body }` | required, ≤ 2000. `author` comes from the token. This is the only write a `member` may make. |
+| `DELETE /blog/:postId/comments/:commentId` | no body | allowed for the comment's author or the post's author |
+| `POST /contact` | `{ name, email, message }` | `name` 2–80, `email` must match, `message` 10–4000. No account required — this is the one write the public can make. |
+| `PUT`/`PATCH /contact/:id/read` | no body | marks that one message read and returns it |
+
+**Read endpoints — query parameters**
+
+| Endpoint | Params |
+|---|---|
+| `GET /projects` | `?cat=` — exact match on the category inside the payload |
+| `GET /skills` | `?category=` (one of the five, or `All`) and `?minLevel=` (1–5) |
+| `GET /blog` | `?cat=` |
+| `GET /blog/:id` | — (response carries `commentCount`) |
+| `GET /blog/:postId/comments` | — (author populated) |
+| `GET /contact` | — (newest first) |
+| `GET /admin/stats`, `/admin/activity` | — |
+
+**A complete authenticated call**
+
+```bash
+API=https://crisfu-api-ngpxktjcws.cn-hangzhou.fcapp.run/api
+
+TOKEN=$(curl -s -X POST "$API/users/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cris@crisfu.dev","password":"crisfu2026"}' \
+  | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+curl -s -X POST "$API/projects" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"title":"Demo","description":"Created from curl","liveUrl":"https://example.com"}'
+```
+
 ---
 
 ## Run it locally
 
-```bash
-# API — needs server/.env with MONGODB_URI and JWT_SECRET
-cd server && npm install && npm run seed && npm run dev      # http://localhost:5000
+You need Node 18+, a MongoDB database (Atlas free tier works) and two terminals.
 
-# Client
-cd cris-react && npm install && npm run dev                  # http://localhost:5173
+```bash
+# 1. API — reads server/.env
+cd server
+cp .env.example .env          # then fill in MONGODB_URI and JWT_SECRET
+npm install
+npm run seed                  # creates the admin account + 6 projects, 18 skills, 6 posts
+npm run dev                   # http://localhost:5000
+
+# 2. Client — reads cris-react/.env.local
+cd ../cris-react
+cp .env.example .env.local    # VITE_API_URL already points at localhost:5000/api
+npm install
+npm run dev                   # http://localhost:5173
 ```
 
-`cris-react/.env.local` sets `VITE_USE_MOCK=false` so the client hits the API. Removing that
-file flips the client to a localStorage-backed mock, which is how the UI can be developed
-without a database.
+Open `http://localhost:5173`. If the home page shows projects and the toolbox fills up, the
+two halves are connected.
+
+### Environment variables
+
+`server/.env` (the API reads it through `dotenv`; there is no other config file):
+
+| Variable | Required | What it does |
+|---|---|---|
+| `MONGODB_URI` | yes | Atlas connection string **including the database name**, e.g. `mongodb+srv://user:pass@cluster.mongodb.net/crisfu?retryWrites=true&w=majority`. Without the name, Mongoose writes to `test`. |
+| `JWT_SECRET` | yes | any long random string; changing it logs every session out |
+| `JWT_EXPIRES_IN` | no | default `7d` |
+| `PORT` | no | default `5000` |
+| `NODE_ENV` | no | `development` turns on the verbose error handler |
+| `ADMIN_EMAILS` | no | comma-separated addresses that become `admin` on register — set this to your own address or you will not be able to write. Exact addresses only, no wildcards. |
+| `CLIENT_ORIGIN` | no | extra CORS origin. `localhost` and `*.vercel.app` are always allowed. |
+| `SEED_USERNAME` / `SEED_EMAIL` / `SEED_PASSWORD` | no | the account `npm run seed` creates |
+
+On Function Compute and Vercel these are set in the platform's environment panel instead of a
+file — `api/fc.js` injects them, so the same code runs unmodified.
+
+`cris-react/.env.local` (the client):
+
+| Variable | What it does |
+|---|---|
+| `VITE_USE_MOCK` | `false` = talk to the real API (default). `true` = read from `src/data` and write to localStorage, so the UI can be developed with no backend at all. |
+| `VITE_API_URL` | where the API lives. Local: `http://localhost:5000/api`. Production: an absolute URL (`https://…fcapp.run/api`), which is what the deployed build is compiled with, or `/api` when the page and the API share an origin. |
+
+### Connecting front-end to back-end
+
+The client never builds a URL by hand. `services/http.js` reads `VITE_API_URL` once and every
+request goes through it, so switching from local to deployed is one line. Three notes:
+
+- The API reflects the request's origin for CORS and answers the `Authorization` pre-flight, so
+  no CORS configuration is needed on the client.
+- The browser sends `Authorization: Bearer <token>` on protected calls. The token is stored in
+  localStorage and re-validated against `GET /users/me` when the app loads — that call is also
+  how the client learns whether the account is `admin`, which is what decides whether `/admin`
+  shows a dashboard or an explanation page.
+- If the API is unreachable the client degrades to the mock instead of showing an empty shell,
+  so a dead back-end looks like "working but read-only" rather than "broken".
 
 Seeded admin account: `cris@crisfu.dev` / `crisfu2026`.
+Promote any other account with `cd server && npm run set:admin -- you@example.com`.
 
 ---
 
@@ -157,14 +260,41 @@ Seeded admin account: `cris@crisfu.dev` / `crisfu2026`.
 
 ```bash
 cd server
-npm run test:api          # 53 assertions against a real Express + Atlas stack
-npm run test:serverless   # 12 assertions for the Vercel serverless entry point
-npm run test:fc           # 13 assertions for the Function Compute event adapter
+npm run test:api          # 76 assertions against a real Express + Atlas stack
+npm run test:serverless   # 12 assertions for the serverless entry point
+npm run test:fc           # 15 assertions for the Function Compute event adapter
+npm run clean:test        # deletes the accounts and records the tests created
 
 cd ../cris-react
 npm run build             # production build
-npm run smoke             # 13 browser checks against the mock build
+npm run smoke             # 13 browser scenarios against the mock build
+SMOKE_BASE=https://147258wsd-blip.github.io/crisfu-capstone npm run smoke:real
+                          # the same checks against the deployed site + live API
 ```
+
+`test:api` is not mocked: it registers real accounts, creates real documents and asserts on
+status codes and response bodies, then `clean:test` removes what it made. The role gate is
+covered from both sides — a member is expected to be refused, an admin to be served.
+
+---
+
+## What is in this archive
+
+`24998018_FuZhenyu_CapstoneProject.zip` — 153 files. `node_modules` is excluded from **both**
+halves, as are `.git`, the build output (`cris-react/dist`) and any real `.env`. Only
+`.env.example` templates ship.
+
+```
+README.md               ← this file
+DEPLOY.md               the same app on a plain Ubuntu VPS (nginx + pm2)
+部署-FC.md              the Alibaba Cloud Function Compute walkthrough — the one in use
+server/                 Express API: models, controllers, routes, middleware, tests, seed
+cris-react/             React 18 + Vite client: pages, services, adapters, build scripts
+prototypes/             the debate simulator, as one self-contained HTML file
+```
+
+Counts worth quoting: **27 API endpoints** · **76 + 12 + 15** server-side assertions ·
+**6 projects** (1 live, 1 prototype, 4 concepts) · **18 skills** · **6 posts**.
 
 ---
 

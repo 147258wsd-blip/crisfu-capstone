@@ -144,6 +144,22 @@ const json = (res) => JSON.parse(res.body);
     if (!r.body.includes("<div id=\"root\">")) throw new Error("SPA document not returned");
   });
 
+  /* `/api-docs.html` is a page in public/, but its path starts with "/api",
+     which used to route it into Express and return a JSON 404. The prefix
+     check has to be `/api` or `/api/`, not a bare startsWith. */
+  await check("GET /api-docs.html -> 200 html (docs page, not the API)", async () => {
+    const r = await handler(makeEvent("GET", "/api-docs.html"), {});
+    eq(r.statusCode, 200, "status");
+    if (!String(r.headers["content-type"]).includes("text/html")) throw new Error("not html");
+    if (!/api reference|endpoints/i.test(r.body)) throw new Error("docs page content missing");
+  });
+
+  await check("GET /api still reaches Express (not the static handler)", async () => {
+    const r = await handler(makeEvent("GET", "/api"), {});
+    eq(r.statusCode, 200, "status");
+    if (!String(r.headers["content-type"]).includes("json")) throw new Error("expected the JSON endpoint map");
+  });
+
   await check("GET /assets/<hashed>.js -> 200 immutable js", async () => {
     const dir = path.join(process.env.FC_STATIC_ROOT, "assets");
     const file = fs.readdirSync(dir).find((f) => f.endsWith(".js"));
